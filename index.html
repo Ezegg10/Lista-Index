@@ -230,7 +230,9 @@
           <div class="mt-6">
             <h3 class="section-title">Adicionar Aluno à Fila de Espera</h3>
             <div class="flex gap-2">
-              <input id="input-name" class="input flex-1" placeholder="Nome completo do aluno (ex: Allanna Leite Teixeira)">
+              <!-- Input com Autocomplete (#6) -->
+              <input id="input-name" class="input flex-1" placeholder="Nome completo do aluno (ex: Allanna Leite Teixeira)" list="datalist-nomes">
+              <datalist id="datalist-nomes"></datalist>
               <button id="btn-add" class="btn-primary">Adicionar à Fila</button>
             </div>
           </div>
@@ -239,6 +241,12 @@
             <div class="flex items-center justify-between">
               <h3 class="section-title">Fila de Saída & Retorno <span id="pending-count" class="badge">0</span></h3>
               <input id="hist-search" class="input w-56" placeholder="🔎 Filtrar histórico...">
+            </div>
+            <!-- Filtros Rápidos da Fila (#8) -->
+            <div class="flex gap-2 mt-4" id="fila-filter-buttons">
+                <button class="btn-primary active px-4" data-fila-filter="todos">Todos</button>
+                <button class="btn-secondary px-4" data-fila-filter="pendentes">Pendentes</button>
+                <button class="btn-secondary px-4" data-fila-filter="liberados">Liberados</button>
             </div>
             <ul id="pending-list" class="mt-3 grid gap-3"></ul>
           </div>
@@ -275,6 +283,8 @@
             <input id="s5-p3" class="input" placeholder="Pessoa 3">
             <input id="s5-p4" class="input" placeholder="Pessoa 4">
             <select id="s5-shift" class="input"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
+            <!-- Observações 5S (#10) -->
+            <textarea id="s5-notes" class="input sm:col-span-2" rows="2" placeholder="Observações (opcional)"></textarea>
             <button id="s5-add" class="btn-primary sm:col-span-2">Adicionar Equipe</button>
           </div>
           <ul id="s5-list" class="mt-6 grid gap-2"></ul>
@@ -300,6 +310,11 @@
             </div>
             <div class="field sm:col-span-2">
               <label>Motivo Padrão</label><input id="def-reason" class="input">
+            </div>
+            <!-- Cadastro de Motivos (#7) -->
+            <div class="field sm:col-span-2">
+              <label>Motivos Comuns (separados por ; )</label>
+              <textarea id="conf-reasons" class="input" rows="3" placeholder="Ex: Banheiro;Beber Água;Secretaria;Outro"></textarea>
             </div>
             <button id="btn-save-settings" class="btn-primary sm:col-span-2">Salvar Configurações</button>
           </div>
@@ -347,12 +362,15 @@
       settings: {
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
-        defaultReason: "Banheiro"
+        defaultReason: "Banheiro",
+        commonReasons: "Banheiro;Beber Água;Secretaria;Outro" // (#7)
       },
       // themeMode removido
       requests: [],
       s5Teams: [],
       chatMessages: [], // (Novo)
+      knownNames: [], // (#6) Autocomplete
+      filaFilter: "todos", // (#8) Filtro da fila
       audioInitialized: false, // Novo
       audioCtx: null, // Novo
       alarmOn: true, // Novo
@@ -548,6 +566,7 @@
         $("#al4").value = state.settings.alertLevels[3];
         $("#alP").value = state.settings.persistentAlarmMinutes;
         $("#def-reason").value = state.settings.defaultReason || "";
+        $("#conf-reasons").value = state.settings.commonReasons || "Banheiro;Beber Água;Secretaria;Outro"; // (#7)
       });
 
       // v11
@@ -572,18 +591,42 @@
         state.chatMessages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
         renderChat();
       });
+
+      // v11 (Novo - #6)
+      onValue(ref(db, "nomes_conhecidos"), (snap)=>{
+        const data = snap.val() || {};
+        state.knownNames = Object.keys(data);
+        renderDatalist();
+      });
+    }
+
+    /* ========================== Render Datalist (#6) ========================== */
+    function renderDatalist() {
+        const dl = $("#datalist-nomes");
+        dl.innerHTML = "";
+        state.knownNames.forEach(name => {
+            dl.innerHTML += `<option value="${name}"></option>`;
+        });
     }
 
     /* ========================== Render Saídas (Atualizado) ========================== */
     function renderSaidas(){
-      const pending = state.requests.filter(r => r.status==="pending" || r.status==="approved");
+      // Filtro da Fila (#8)
+      const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
+      const pending = pendingAll.filter(r => {
+        if (state.filaFilter === 'todos') return true;
+        if (state.filaFilter === 'pendentes') return r.status === 'pending';
+        if (state.filaFilter === 'liberados') return r.status === 'approved';
+        return true;
+      });
+
       const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
       $("#pending-count").textContent = pending.length.toString();
 
       const pList = $("#pending-list");
       pList.innerHTML = "";
       if(pending.length===0){
-        pList.innerHTML = `<li class="text-sm opacity-70 italic">Ninguém na fila agora.</li>`;
+        pList.innerHTML = `<li class="text-sm opacity-70 italic">Nenhum item nesta visualização.</li>`;
       }
       const now = Date.now();
 
@@ -616,6 +659,16 @@
         // Adicionados botões de editar/excluir
         right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
                             <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
+        
+        // Botão Snooze (#9)
+        const elapsedMinutes = (now - new Date(req.departureTime || now).getTime()) / 60000;
+        if (isApproved && elapsedMinutes >= state.settings.alertLevels[3]) {
+            if (req.alarmeCiente) {
+                right.innerHTML += `<button class="btn-icon" data-act="unsnooze" data-id="${req.id}" title="Reativar Alarme Sonoro">🔈</button>`;
+            } else {
+                right.innerHTML += `<button class="btn-icon" data-act="snooze" data-id="${req.id}" title="Silenciar Alarme Sonoro">🔇</button>`;
+            }
+        }
 
         li.append(left, right);
         pList.appendChild(li);
@@ -688,7 +741,10 @@
         const list = [team.person1,team.person2,team.person3,team.person4].filter(Boolean).join(", ");
         const label = document.createElement("div");
         const reg = new Date(team.registrationTime||Date.now()).toLocaleDateString("pt-BR");
-        label.innerHTML = `<div class="font-extrabold">${reg} — ${team.shift}</div><div class="text-sm opacity-80">${list}</div>`;
+        // Adicionado render de Notas (#10)
+        label.innerHTML = `<div class="font-extrabold">${reg} — ${team.shift}</div>
+                           <div class="text-sm opacity-80">${list}</div>` +
+                           (team.notes ? `<div class="text-xs opacity-70 mt-2 p-2 bg-slate-100 dark:bg-slate-700/50 rounded-md w-full"><b>Nota:</b> ${team.notes.replace(/\n/g, '<br>')}</div>` : '');
         
         const right = document.createElement("div");
         right.className = "flex items-center gap-2";
@@ -767,6 +823,10 @@
     function addStudent(){
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
+
+      // Salva o nome para Autocomplete (#6)
+      set(ref(db, "nomes_conhecidos/" + name), true);
+
       // v11
       push(ref(db, "saidas"), {
         userName: name,
@@ -783,7 +843,8 @@
       update(ref(db, "saidas/"+id), {
         status: "approved",
         departureTime: new Date().toISOString(),
-        reason: state.settings.defaultReason || "Banheiro"
+        reason: state.settings.defaultReason || "Banheiro",
+        alarmeCiente: false // (#9) Reseta o snooze ao aprovar
       });
     }
     function reject(id){
@@ -798,7 +859,8 @@
       // v11
       update(ref(db, "saidas/"+id), {
         status: "completed",
-        returnTime: new Date().toISOString()
+        returnTime: new Date().toISOString(),
+        alarmeCiente: false // (#9) Limpa o snooze
       });
     }
     async function removeReq(id){
@@ -808,7 +870,7 @@
       toast("Registro excluído.", "ok");
     }
 
-    // (Atualizado)
+    // (Atualizado - #7 Motivos)
     function openEditSaidaModal(id) {
       const req = state.requests.find(r => r.id === id);
       if (!req) return toast("Registro não encontrado.", "error");
@@ -820,15 +882,38 @@
       const departureTimeLocal = formatDateTimeLocal(req.departureTime);
       const returnTimeLocal = formatDateTimeLocal(req.returnTime);
 
+      // Lógica de Motivos (#7)
+      const reasons = (state.settings.commonReasons || "Banheiro;Outro").split(';').filter(Boolean);
+      let isCommonReason = reasons.includes(currentReason);
+      if (!isCommonReason && currentReason && !reasons.includes("Outro")) {
+        reasons.push("Outro"); // Garante que "Outro" esteja lá se o motivo for customizado
+      } else if (!reasons.includes("Outro")) {
+        reasons.push("Outro"); // Garante que "Outro" esteja sempre como opção
+      }
+      
+      let reasonHtml = `<div class="field">
+                          <label>Motivo</label>
+                          <select id="edit-saida-reason-select" class="input">`;
+
+      reasons.forEach(r => {
+          const selected = (r === currentReason) || (r === "Outro" && !isCommonReason && currentReason);
+          reasonHtml += `<option value="${r}" ${selected ? 'selected' : ''}>${r}</option>`;
+      });
+      
+      reasonHtml += `</select>
+                  </div>
+                  <div class="field" id="other-reason-field" ${!isCommonReason && currentReason ? '' : 'style="display: none;"'}>
+                      <label>Outro Motivo</label>
+                      <input id="edit-saida-reason-text" class="input" value="${isCommonReason ? '' : currentReason}">
+                  </div>`;
+
+
       const content = `
         <div class="field">
           <label>Nome do Aluno</label>
           <input id="edit-saida-name" class="input" value="${req.userName}">
         </div>
-        <div class="field">
-          <label>Motivo</label>
-          <input id="edit-saida-reason" class="input" value="${currentReason}" placeholder="Motivo da saída">
-        </div>
+        ${reasonHtml}
         <div class="field">
           <label>Hora de Solicitação</label>
           <input id="edit-request-time" type="datetime-local" class="input" value="${requestTimeLocal}">
@@ -843,12 +928,27 @@
         </div>
       `;
       openModal("Editar Saída", content, () => saveSaida(id));
+
+      // Adiciona listener para o select de motivos
+      $("#edit-saida-reason-select").addEventListener("change", (e) => {
+          $("#other-reason-field").style.display = (e.target.value === 'Outro') ? 'block' : 'none';
+          if (e.target.value === 'Outro') {
+            $("#edit-saida-reason-text").focus();
+          }
+      });
     }
 
-    // (Atualizado)
+    // (Atualizado - #7 Motivos)
     function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
-      const reason = ($("#edit-saida-reason").value || "").trim();
+      
+      // Lógica de Motivos (#7)
+      const reasonSelect = $("#edit-saida-reason-select").value;
+      let finalReason = reasonSelect;
+      if (reasonSelect === "Outro") {
+          finalReason = ($("#edit-saida-reason-text").value || "").trim() || "Outro";
+      }
+
       const requestTime = parseDateTimeLocal($("#edit-request-time").value);
       const departureTime = parseDateTimeLocal($("#edit-departure-time").value);
       const returnTime = parseDateTimeLocal($("#edit-return-time").value);
@@ -857,7 +957,7 @@
 
       const updates = {
         userName: name,
-        reason: reason || (state.settings.defaultReason || "Banheiro"),
+        reason: finalReason, // Salva o motivo correto
         requestTime: requestTime,
         departureTime: departureTime,
         returnTime: returnTime,
@@ -900,10 +1000,12 @@
         person4: p[3] || "Vago",
         shift: $("#s5-shift").value,
         isCompleted: false,
-        registrationTime: new Date().toISOString()
+        registrationTime: new Date().toISOString(),
+        notes: ($("#s5-notes").value || "").trim() // (#10)
       };
       push(ref(db, "s5Teams"), payload).then(() => { // v11
         ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].forEach(sel => $(sel).value = "");
+        $("#s5-notes").value = ""; // Limpa notas
         toast("Equipe adicionada.", "ok");
       });
     }
@@ -915,6 +1017,7 @@
       toast("Equipe excluída.", "ok");
     }
 
+    // (Atualizado - #10 Notas)
     function openEditS5Modal(id) {
       const team = state.s5Teams.find(t => t.id === id);
       if (!team) return toast("Equipe não encontrada.", "error");
@@ -945,10 +1048,16 @@
             <option ${team.shift === 'Noite' ? 'selected' : ''}>Noite</option>
           </select>
         </div>
+        <!-- Notas 5S (#10) -->
+        <div class="field sm:col-span-2">
+          <label>Observações</label>
+          <textarea id="edit-s5-notes" class="input" rows="3" placeholder="Ex: Concluído, mas lixeira do Setor B cheia.">${team.notes || ''}</textarea>
+        </div>
       `;
       openModal("Editar Equipe 5S", content, () => saveS5Team(id));
     }
 
+    // (Atualizado - #10 Notas)
     function saveS5Team(id) {
       const p = ["#edit-s5-p1", "#edit-s5-p2", "#edit-s5-p3", "#edit-s5-p4"].map(sel => cleanName($(sel).value));
       const payload = {
@@ -957,6 +1066,7 @@
         person3: p[2] || "Vago",
         person4: p[3] || "Vago",
         shift: $("#edit-s5-shift").value,
+        notes: ($("#edit-s5-notes").value || "").trim() // Salva as notas
       };
 
       update(ref(db, "s5Teams/" + id), payload).then(() => {
@@ -1049,25 +1159,28 @@
       const payload = {
         alertLevels: vals,
         persistentAlarmMinutes: pers,
-        defaultReason: $("#def-reason").value || "Banheiro"
+        defaultReason: $("#def-reason").value || "Banheiro",
+        commonReasons: ($("#conf-reasons").value || "").trim() // (#7)
       };
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok")); // v11
     }
 
-    /* ========================== Backup / Reset (Atualizado) ========================== */
+    /* ========================== Backup / Reset ========================== */
     async function downloadBackup(){
       // 'themeSnap' removido
-      const [saidasSnap, s5Snap, confSnap, chatSnap] = await Promise.all([ // chatSnap adicionado
+      const [saidasSnap, s5Snap, confSnap, chatSnap, nomesSnap] = await Promise.all([ // chatSnap e nomesSnap adicionado
         get(ref(db, "saidas")), // v11
         get(ref(db, "s5Teams")), // v11
         get(ref(db, "settings")), // v11
-        get(ref(db, "chatMessages")) // (Novo)
+        get(ref(db, "chatMessages")), // (Novo)
+        get(ref(db, "nomes_conhecidos")) // (#6)
       ]);
       const content = {
         saidas: saidasSnap.val() || {},
         s5Teams: s5Snap.val() || {},
         settings: confSnap.val() || {},
         chatMessages: chatSnap.val() || {}, // (Novo)
+        nomes_conhecidos: nomesSnap.val() || {}, // (#6)
         // 'themeMode' removido
         exportedAt: new Date().toISOString()
       };
@@ -1091,6 +1204,7 @@
         if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams)); // v11
         if (data.settings) tasks.push(set(ref(db, "settings"), data.settings)); // v11
         if (data.chatMessages) tasks.push(set(ref(db, "chatMessages"), data.chatMessages)); // (Novo)
+        if (data.nomes_conhecidos) tasks.push(set(ref(db, "nomes_conhecidos"), data.nomes_conhecidos)); // (#6)
         // 'themeMode' removido
         await Promise.all(tasks);
         toast("Backup importado!", "ok");
@@ -1099,18 +1213,19 @@
       }
     }
     async function resetAll(){
-      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chat, configurações)?"); // Atualizado
+      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chat, nomes, configs)?"); // Atualizado
       if (!ok) return;
       await Promise.all([
         remove(ref(db, "saidas")), // v11
         remove(ref(db, "s5Teams")), // v11
         remove(ref(db, "settings")), // v11
-        remove(ref(db, "chatMessages")) // (Novo)
+        remove(ref(db, "chatMessages")), // (Novo)
+        remove(ref(db, "nomes_conhecidos")) // (#6)
       ]);
       toast("Tudo resetado.", "ok");
     }
 
-    /* ========================== Clock & alerts (Atualizado) ========================== */
+    /* ========================== Clock & alerts (Atualizado - #9) ========================== */
     function startClock(){
       if (state.timers.clock) clearInterval(state.timers.clock);
       
@@ -1164,7 +1279,7 @@
                 // Entrou no estado de alarme persistente
                 console.log(`Alarme persistente para: ${r.userName}`);
                 state.alarmingStudents.add(r.id);
-                shouldBeep = true; // Toca o bipe na transição
+                if (!r.alarmeCiente) shouldBeep = true; // Toca o bipe na transição (se não silenciado)
               }
             } else {
               // Se estava no alarme persistente mas saiu (ex: editou horário ou voltou)
@@ -1191,11 +1306,23 @@
 
       }, 1000); // O relógio principal atualiza a cada segundo
 
-      // Novo Timer: Alarme Persistente (toca a cada X segundos)
+      // Novo Timer: Alarme Persistente (toca a cada X segundos) (Atualizado - #9)
       state.timers.alert = setInterval(() => {
-        if (state.alarmingStudents.size > 0 && state.alarmOn) {
-            console.log("Bipe de alarme persistente...");
-            playBeep();
+        if (state.alarmOn && state.alarmingStudents.size > 0) {
+            let shouldPlay = false;
+            // Verifica se algum aluno em alarme NÃO está silenciado
+            for (const studentId of state.alarmingStudents) {
+                const studentReq = state.requests.find(r => r.id === studentId);
+                if (studentReq && !studentReq.alarmeCiente) {
+                    shouldPlay = true;
+                    break;
+                }
+            }
+            
+            if (shouldPlay) {
+                console.log("Bipe de alarme persistente...");
+                playBeep();
+            }
         }
       }, 5000); // Toca o bipe a cada 5 segundos se houver alguém na lista
     }
@@ -1217,7 +1344,7 @@
 
       $("#btn-add").addEventListener("click", addStudent);
       
-      // Listener unificado para "pending-list"
+      // Listener unificado para "pending-list" (Atualizado - #9 Snooze)
       $("#pending-list").addEventListener("click", (e)=>{
         const btn = e.target.closest("button[data-act]");
         if (!btn) return;
@@ -1227,6 +1354,8 @@
         if (act==="return") arrived(id);
         if (act==="del-saida") removeReq(id);
         if (act==="edit-saida") openEditSaidaModal(id);
+        if (act==="snooze") update(ref(db, "saidas/"+id), { alarmeCiente: true });
+        if (act==="unsnooze") update(ref(db, "saidas/"+id), { alarmeCiente: false });
       });
 
       // Listener unificado para "history" (colapso e botões)
@@ -1314,6 +1443,21 @@
         }
       });
 
+      // Filtros da Fila (#8)
+      $("#fila-filter-buttons").addEventListener('click', (e) => {
+          const filterBtn = e.target.closest('[data-fila-filter]');
+          if (filterBtn) {
+              $$('#fila-filter-buttons button').forEach(b => {
+                  b.classList.remove('btn-primary', 'active');
+                  b.classList.add('btn-secondary'); // Garante que é secondary
+              });
+              filterBtn.classList.add('btn-primary', 'active');
+              filterBtn.classList.remove('btn-secondary');
+              state.filaFilter = filterBtn.dataset.filaFilter;
+              renderSaidas();
+          }
+      });
+
       // Login
       $("#login-btn").addEventListener("click", ()=> {
         initAudio(); // Garante que o áudio funcione após o login
@@ -1337,4 +1481,6 @@
   </script>
 </body>
 </html>
+
+
 
