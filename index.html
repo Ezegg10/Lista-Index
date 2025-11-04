@@ -4,12 +4,22 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lista de Saídas</title>
+
+  <!-- Meta PWA -->
+  <meta name="theme-color" content="#0b1220"/>
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Ícone (Necessário para o 'Add to Home Screen') -->
+  <link rel="apple-touch-icon" href="https://placehold.co/192x192/0b1220/ffffff?text=App">
+
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
 
+  <!-- Referência ao CSS externo -->
+  <link rel="stylesheet" href="style.css">
+
   <!-- no-flash theme (dark forced) -->
-  <!-- Este script força o modo noturno imediatamente -->
   <script>
     (function() {
       document.documentElement.classList.add("dark");
@@ -17,12 +27,11 @@
     })();
   </script>
 
-  <!-- Tailwind CDN -->
-  <!-- CORREÇÃO: Revertida a ordem. O script CDN deve vir PRIMEIRO. -->
+  <!-- Tailwind CDN (Mantido, pois o app.js não o importa) -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class', // Ainda necessário para o Tailwind funcionar
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: { inter: ['Inter', 'system-ui', 'ui-sans-serif']},
@@ -40,98 +49,12 @@
     }
   </script>
 
-
-  <!-- Estilos CSS embutidos --><style>
-    :root{--border:rgba(148,163,184,.35)}
-    *{outline:0}
-    .input{border:1px solid var(--border);border-radius:12px;padding:.65rem .8rem;background:#fff;color:#0f172a;transition:all .2s}
-    .dark .input{background:#0b1220;color:#f8fafc;border-color:rgba(148,163,184,.25)}
-    .input:focus{box-shadow:0 0 0 3px rgba(37,99,235,.2);border-color:#2563eb}
-    .btn-primary{background:#2563eb;color:#fff;border-radius:12px;padding:.65rem .95rem;font-weight:800;transition:transform .05s ease;box-shadow:0 10px 25px -10px rgba(37,99,235,.6)}
-    .btn-primary:hover{background:#1d4ed8}
-    .btn-primary:active{transform:translateY(1px)}
-    .btn-secondary{background:#e2e8f0;border:1px solid var(--border);border-radius:12px;padding:.6rem .9rem;font-weight:700}
-    .dark .btn-secondary{background:#0b1220}
-    .btn-danger{background:#ef4444;color:#fff;border-radius:12px;padding:.6rem .9rem;font-weight:800}
-    .btn-ghost{border:1px solid var(--border);border-radius:12px;padding:.5rem .8rem;font-weight:700;background:transparent}
-    /* Botão de ícone adicionado */
-    .btn-icon{border:1px solid var(--border);border-radius:12px;padding: .5rem; font-weight:700;background:transparent;line-height:1; min-width: 38px; text-align: center;}
-    .btn-icon:hover, .btn-ghost:hover { background-color: rgba(148,163,184,.1); }
-    .dark .btn-icon:hover, .dark .btn-ghost:hover { background-color: rgba(148,163,184,.2); }
-    
-    .card{border:1px solid var(--border);background:#fff;border-radius:16px;padding:1rem 1rem 1.25rem 1rem;box-shadow:0 10px 25px -12px rgba(0,0,0,.25)}
-    .dark .card{background:#0b1220}
-    .section-title{font-weight:800}
-    .badge{background:#fde68a;color:#78350f;border-radius:9999px;padding:.1rem .55rem;font-size:.75rem;font-weight:800}
-    .field>label{display:block;font-size:.85rem;opacity:.8;margin-bottom:.25rem}
-    .tab-btn{border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;text-align:left;font-weight:800;background:transparent; display: flex; align-items: center; /* Modificado para ícones */}
-    .tab-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
-    #toast{background:#111827;color:#fff;border-radius:9999px;padding:.6rem 1rem;font-weight:800;box-shadow:0 10px 25px -12px rgba(0,0,0,.35)}
-    .pending-item{border-left:4px solid #f59e0b;background:#fffbeb;border-radius:12px;padding:.7rem .75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
-    .approved-item{border-left:4px solid #22c55e;background:#ecfdf5;border-radius:12px;padding:.7rem .75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
-    .dark .pending-item{background:#0f172a}
-    .dark .approved-item{background:#052e1a}
-    .hidden{display:none}
-    /* Classe de exibição do modal */
-    #modal-overlay.flex { display: flex; }
-
-    /* Estilos de Alarme (Novo) */
-    @keyframes pulse-red {
-      0%, 100% { background-color: #ef4444; color: white; }
-      50% { background-color: #f87171; color: white; }
-    }
-    .alarm-level-1 { background-color: #fef3c7; } /* Amarelo claro */
-    .dark .alarm-level-1 { background-color: #422006; }
-    .alarm-level-2 { background-color: #fde68a; } /* Amarelo mais forte */
-    .dark .alarm-level-2 { background-color: #78350f; }
-    .alarm-level-3 { background-color: #fca5a5; } /* Vermelho claro */
-    .dark .alarm-level-3 { background-color: #7f1d1d; }
-    .alarm-level-4 { 
-      animation: pulse-red 1.5s infinite; 
-      border-color: #b91c1c;
-    }
-    .dark .alarm-level-4 { 
-      animation: pulse-red 1.5s infinite; 
-      border-color: #ef4444;
-    }
-
-    /* Estilos do Chat (Novo) */
-    .chat-msg { position: relative; display: flex; flex-direction: column; }
-    .chat-msg.sent { align-items: flex-end; }
-    .chat-msg.received { align-items: flex-start; }
-    .chat-msg-bubble { max-w-xs; padding: .5rem .75rem; border-radius: 12px; word-wrap: break-word; }
-    .chat-msg.sent .chat-msg-bubble { background: #2563eb; color: white; border-bottom-right-radius: 4px; }
-    .chat-msg.received .chat-msg-bubble { background: #e2e8f0; border-bottom-left-radius: 4px; }
-    .dark .chat-msg.received .chat-msg-bubble { background: #1e293b; color: #f8fafc; }
-    .chat-msg-user { font-size: .75rem; font-weight: 800; opacity: .7; margin: 0 .25rem .1rem .25rem; }
-
-    /* Estilos de Edição/Exclusão do Chat (Novo) */
-    .chat-msg-actions {
-      position: absolute;
-      top: 0;
-      display: none;
-      gap: 4px;
-      z-index: 10;
-    }
-    .chat-msg.sent .chat-msg-actions { right: 0; }
-    .chat-msg.received .chat-msg-actions { left: 0; }
-    .chat-msg:hover .chat-msg-actions { display: flex; }
-    .chat-msg-actions button {
-      padding: 2px 4px !important;
-      font-size: 10px !important;
-      line-height: 1 !important;
-      min-width: 20px !important;
-      border-radius: 6px !important;
-      background-color: rgba(0,0,0,0.2);
-    }
-    .dark .chat-msg-actions button { background-color: rgba(255,255,255,0.2); }
-  </style>
-
 </head>
-<!-- A classe 'dark' é aplicada diretamente aqui pelo script acima -->
 <body class="font-inter bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300">
 
-  <!-- Login overlay --><div id="login-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+  <!-- O HTML da aplicação permanece o mesmo -->
+  <div id="login-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <!-- ... (todo o conteúdo do login overlay) ... -->
     <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
       <div class="flex items-center gap-3 mb-4">
         <h2 class="text-xl font-extrabold">Acesso</h2>
@@ -146,7 +69,8 @@
     </div>
   </div>
 
-  <!-- Modal Genérico (Novo) --><div id="modal-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+  <div id="modal-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
+    <!-- ... (todo o conteúdo do modal genérico) ... -->
     <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
       <div class="flex items-center justify-between mb-4">
         <h2 id="modal-title" class="text-xl font-extrabold">Editar</h2>
@@ -161,9 +85,9 @@
     </div>
   </div>
 
-
-  <!-- App --><div id="app" class="opacity-0">
+  <div id="app" class="opacity-0">
     <header class="sticky top-0 z-40 backdrop-blur bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/60 dark:border-slate-700/60">
+      <!-- ... (todo o conteúdo do header) ... -->
       <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <h1 class="text-lg sm:text-2xl font-black">Lista de Saídas<span class="text-slate-400"></span></h1>
@@ -176,7 +100,8 @@
     </header>
 
     <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-[280px,1fr] gap-6">
-      <!-- Sidebar --><aside class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-4 h-fit md:sticky md:top-20">
+      <aside class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-4 h-fit md:sticky md:top-20">
+        <!-- ... (todo o conteúdo da sidebar) ... -->
         <h3 class="text-base font-extrabold">Navegação</h3>
         <nav class="grid gap-2">
           <!-- Botões de aba atualizados com Ícones SVG -->
@@ -197,16 +122,15 @@
             Configurações
           </button>
         </nav>
-
         <div class="rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 p-3 text-sm">
           <b>Status:</b> <span id="status-conn">Conectado</span> <span class="opacity-70">(Nuvem)</span>
         </div>
-
-        <!-- Gerenciar Dados --><div>
+        <div>
           <button id="ddm-header" class="w-full flex items-center justify-between rounded-xl bg-slate-50 dark:bg-slate-700/40 px-3 py-2 text-sm font-bold">
             Gerenciar Dados <span class="transition-transform" id="ddm-caret">▼</span>
           </button>
-          <div id="ddm" class="mt-3 grid gap-2 hidden"> <!-- Começa oculto --><button id="btn-backup-download" class="btn-secondary">Baixar Backup Completo (.json)</button>
+          <div id="ddm" class="mt-3 grid gap-2 hidden">
+            <button id="btn-backup-download" class="btn-secondary">Baixar Backup Completo (.json)</button>
             <label class="btn-secondary cursor-pointer text-center">
               <input id="file-backup" type="file" accept="application/json" class="hidden">
               Carregar Backup Completo (.json)
@@ -216,33 +140,28 @@
         </div>
       </aside>
 
-      <!-- Content --><section class="space-y-6">
-        <!-- Saídas --><div id="tab-saidas" class="card">
+      <section class="space-y-6">
+        <div id="tab-saidas" class="card">
+          <!-- ... (todo o conteúdo da tab saidas) ... -->
           <div class="flex items-center justify-between gap-4">
             <div>
               <h2 class="text-xl font-bold">Painel de Controle</h2>
               <p class="text-sm opacity-70">Horário de Brasília</p>
             </div>
-            <!-- Pill do Alarme agora é clicável -->
             <div id="alarm-pill" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 cursor-pointer transition-colors" title="Clique para ligar/desligar o alarme sonoro">ALARME: LIGADO</div>
           </div>
-
           <div class="mt-6">
             <h3 class="section-title">Adicionar Aluno à Fila de Espera</h3>
             <div class="flex gap-2">
-              <!-- Input com Autocomplete (#6) -->
-              <input id="input-name" class="input flex-1" placeholder="Nome completo do aluno (ex: Allanna Leite Teixeira)" list="datalist-nomes">
-              <datalist id="datalist-nomes"></datalist>
+              <input id="input-name" class="input flex-1" placeholder="Nome completo do aluno (ex: Allanna Leite Teixeira)">
               <button id="btn-add" class="btn-primary">Adicionar à Fila</button>
             </div>
           </div>
-
           <div class="mt-8">
             <div class="flex items-center justify-between">
               <h3 class="section-title">Fila de Saída & Retorno <span id="pending-count" class="badge">0</span></h3>
               <input id="hist-search" class="input w-56" placeholder="🔎 Filtrar histórico...">
             </div>
-            <!-- Filtros Rápidos da Fila (#8) -->
             <div class="flex gap-2 mt-4" id="fila-filter-buttons">
                 <button class="btn-primary active px-4" data-fila-filter="todos">Todos</button>
                 <button class="btn-secondary px-4" data-fila-filter="pendentes">Pendentes</button>
@@ -250,32 +169,31 @@
             </div>
             <ul id="pending-list" class="mt-3 grid gap-3"></ul>
           </div>
-
           <div class="mt-8">
             <h3 class="section-title">Histórico</h3>
             <div id="history" class="mt-3 grid gap-2"></div>
           </div>
         </div>
 
-        <!-- Chat (Novo) --><div id="tab-chat" class="card hidden">
-          <div class="flex items-center justify-between mb-4">
+        <div id="tab-chat" class="card hidden">
+          <!-- ... (todo o conteúdo da tab chat) ... -->
+           <div class="flex items-center justify-between mb-4">
             <h2 class="text-xl font-bold">Chat Interno</h2>
             <button id="chat-clear-btn" class="btn-danger btn-icon" title="Limpar todo o histórico do chat">🗑</button>
           </div>
           <div id="chat-box" class="h-64 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-4 space-y-3">
-            <!-- Mensagens do chat serão inseridas aqui -->
             <p class="text-sm opacity-70 italic">Carregando mensagens...</p>
           </div>
           <div class="flex gap-2">
             <input id="chat-input" class="input flex-1" placeholder="Digite sua mensagem...">
             <button id="chat-send" class="btn-primary px-5">
-              <!-- Ícone de Enviar (SVG) -->
               <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 17V4.609a1 1 0 00-1.447-.894l-5 1.428zM10.894 2.553l7 14a1 1 0 001.169-1.409l-5-1.429A1 1 0 0013.825 17V4.609a1 1 0 00-1.447-.894l5 1.428z" /></svg>
             </button>
           </div>
         </div>
 
-        <!-- 5S --><div id="tab-s5" class="card hidden">
+        <div id="tab-s5" class="card hidden">
+          <!-- ... (todo o conteúdo da tab 5S) ... -->
           <h2 class="text-xl font-bold mb-4 text-center">Gestão de Qualidade 5S</h2>
           <div class="grid sm:grid-cols-2 gap-3">
             <input id="s5-p1" class="input" placeholder="Pessoa 1">
@@ -283,14 +201,14 @@
             <input id="s5-p3" class="input" placeholder="Pessoa 3">
             <input id="s5-p4" class="input" placeholder="Pessoa 4">
             <select id="s5-shift" class="input"><option>Manhã</option><option>Tarde</option><option>Noite</option></select>
-            <!-- Observações 5S (#10) -->
             <textarea id="s5-notes" class="input sm:col-span-2" rows="2" placeholder="Observações (opcional)"></textarea>
             <button id="s5-add" class="btn-primary sm:col-span-2">Adicionar Equipe</button>
           </div>
           <ul id="s5-list" class="mt-6 grid gap-2"></ul>
         </div>
 
-        <!-- Config --><div id="tab-config" class="card hidden">
+        <div id="tab-config" class="card hidden">
+          <!-- ... (todo o conteúdo da tab config) ... -->
           <h2 class="text-xl font-bold mb-4 text-center">Configurações</h2>
           <div class="grid sm:grid-cols-2 gap-4">
             <div class="field">
@@ -311,7 +229,6 @@
             <div class="field sm:col-span-2">
               <label>Motivo Padrão</label><input id="def-reason" class="input">
             </div>
-            <!-- Cadastro de Motivos (#7) -->
             <div class="field sm:col-span-2">
               <label>Motivos Comuns (separados por ; )</label>
               <textarea id="conf-reasons" class="input" rows="3" placeholder="Ex: Banheiro;Beber Água;Secretaria;Outro"></textarea>
@@ -322,9 +239,7 @@
       </section>
     </main>
 
-    <!-- Toast --><div id="toast" class="fixed bottom-4 right-4 hidden"></div>
-
-    <!-- Botão de tema removido -->
+    <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
 
   </div>
 
@@ -333,1154 +248,23 @@
     window.addEventListener('load', () => {
       document.documentElement.style.opacity = "1";
       document.getElementById('app').classList.remove('opacity-0');
+
+      // (Novo) Service Worker Registration
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => {
+            console.log('Service Worker registrado com sucesso:', registration.scope);
+          })
+          .catch((error) => {
+            console.error('Falha ao registrar Service Worker:', error);
+          });
+      }
     });
   </script>
 
-  <!-- Firebase v11 (Modular) --><script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+  <!-- Referência ao JS externo -->
+  <script src="app.js" type="module"></script>
 
-    /* ========================== Firebase init ========================== */
-    const firebaseConfig = {
-      apiKey: "AIzaSyBl8K0WVSDtGsgJygr3yCSsQ_voywnm114",
-      authDomain: "gerenciador-saidas-5s-e4c58.firebaseapp.com",
-      databaseURL: "https://gerenciador-saidas-5s-e4c58-default-rtdb.firebaseio.com",
-      projectId: "gerenciador-saidas-5s-e4c58",
-      storageBucket: "gerenciador-saidas-5s-e4c58.firebasestorage.app",
-      messagingSenderId: "990056306037",
-      appId: "1:990056306037:web:7bb1f8b8247631acb3af3c",
-      measurementId: "G-0ZFEQRYPQT"
-    };
-
-    let app, db;
-    app = initializeApp(firebaseConfig);
-    db = getDatabase(app);
-    
-    /* ========================== State ========================== */
-    const state = {
-      session: null,
-      settings: {
-        alertLevels: [6,10,15,20],
-        persistentAlarmMinutes: 25,
-        defaultReason: "Banheiro",
-        commonReasons: "Banheiro;Beber Água;Secretaria;Outro" // (#7)
-      },
-      // themeMode removido
-      requests: [],
-      s5Teams: [],
-      chatMessages: [], // (Novo)
-      knownNames: [], // (#6) Autocomplete
-      filaFilter: "todos", // (#8) Filtro da fila
-      audioInitialized: false, // Novo
-      audioCtx: null, // Novo
-      alarmOn: true, // Novo
-      alarmingStudents: new Set(), // Novo (para alarme persistente)
-      timers: { clock:null, alert:null },
-      editingItemId: null, // Para rastrear item em edição
-    };
-
-    /* ========================== Utils ========================== */
-    const $ = (sel) => document.querySelector(sel);
-    const $$ = (sel) => [...document.querySelectorAll(sel)];
-    const fmtDur = (ms)=>{
-      if (isNaN(ms) || ms < 0) return "0m 0s";
-      const s = Math.floor(ms/1000);
-      return `${Math.floor(s/60)}m ${s%60}s`;
-    };
-    const cleanName = (n)=> (n||"").trim().toLowerCase().split(" ").filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" ");
-    
-    // Helper para formatar data/hora para input type="datetime-local"
-    const formatDateTimeLocal = (isoString) => {
-      if (!isoString) return '';
-      const date = new Date(isoString);
-      date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // Ajusta para fuso horário local
-      return date.toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:mm
-    };
-
-    // Helper para converter datetime-local para ISOString
-    const parseDateTimeLocal = (dateTimeLocalString) => {
-        if (!dateTimeLocalString) return '';
-        const date = new Date(dateTimeLocalString); // Isso interpretará como local se não for ISO completo
-        return date.toISOString(); // Converte para ISO string (UTC)
-    };
-
-    function toast(msg, kind="info"){
-      const box = $("#toast");
-      box.textContent = msg;
-      box.classList.remove("hidden");
-      box.style.background = kind==="error" ? "#ef4444" : (kind==="ok" ? "#065f46" : "#111827");
-      setTimeout(()=>box.classList.add("hidden"), 3000);
-    }
-
-    /* ========================== Audio (Novo) ========================== */
-    function initAudio() {
-      if (state.audioInitialized) return;
-      try {
-        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-        state.audioInitialized = true;
-        console.log("AudioContext inicializado.");
-      } catch (e) {
-        console.error("AudioContext não suportado.", e);
-        toast("Áudio não pôde ser inicializado.", "error");
-      }
-    }
-
-    function playBeep() {
-      if (!state.audioCtx || !state.alarmOn) return; // Só toca se o contexto existir e o alarme estiver LIGADO
-      try {
-        const oscillator = state.audioCtx.createOscillator();
-        const gainNode = state.audioCtx.createGain();
-        
-        oscillator.connect(gainNode);
-        gainNode.connect(state.audioCtx.destination);
-        
-        oscillator.type = 'sine'; // 'sine', 'square', 'sawtooth', 'triangle'
-        oscillator.frequency.setValueAtTime(1000, state.audioCtx.currentTime); // 1000 Hz (beep)
-        gainNode.gain.setValueAtTime(0.5, state.audioCtx.currentTime); // Volume
-        
-        oscillator.start(state.audioCtx.currentTime);
-        oscillator.stop(state.audioCtx.currentTime + 0.2); // Duração de 0.2s
-      } catch (e) {
-        console.error("Falha ao tocar bipe:", e);
-      }
-    }
-
-    /* ========================== Modal Genérico (Novo) ========================== */
-    const $modalOverlay = $("#modal-overlay");
-    const $modalTitle = $("#modal-title");
-    const $modalContent = $("#modal-content");
-    const $modalSave = $("#modal-save");
-    const $modalCancel = $("#modal-cancel");
-    const $modalClose = $("#modal-close");
-
-    let onModalSave = () => {};
-    let onModalCancel = () => {};
-
-    function openModal(title, contentHtml, saveCallback, cancelCallback = () => {}) {
-      $modalTitle.textContent = title;
-      $modalContent.innerHTML = contentHtml;
-      onModalSave = saveCallback;
-      onModalCancel = cancelCallback;
-      $modalSave.textContent = "Salvar"; // Resetar
-      $modalCancel.textContent = "Cancelar"; // Resetar
-      $modalOverlay.classList.remove("hidden");
-      $modalOverlay.classList.add("flex");
-    }
-
-    function closeModal() {
-      $modalOverlay.classList.add("hidden");
-      $modalOverlay.classList.remove("flex");
-      $modalContent.innerHTML = "";
-      state.editingItemId = null;
-      onModalSave = () => {};
-      onModalCancel = () => {};
-    }
-
-    $modalSave.addEventListener("click", () => onModalSave());
-    $modalCancel.addEventListener("click", closeModal);
-    $modalClose.addEventListener("click", closeModal);
-
-    // Modal de Confirmação (substituindo window.confirm)
-    function openConfirmModal(text, callback) {
-      $modalTitle.textContent = "Confirmação";
-      $modalContent.innerHTML = `<p>${text}</p>`;
-      $modalSave.textContent = "Confirmar";
-      $modalCancel.textContent = "Cancelar";
-      
-      onModalSave = () => {
-        closeModal();
-        callback(true);
-      };
-      
-      onModalCancel = () => {
-        closeModal();
-        callback(false);
-      };
-
-      $modalOverlay.classList.remove("hidden");
-      $modalOverlay.classList.add("flex");
-    }
-    
-    // Wrapper async para o confirmBox
-    function confirmBox(text) {
-      return new Promise((resolve) => {
-        openConfirmModal(text, (ok) => {
-          resolve(ok);
-        });
-      });
-    }
-
-    /* ========================== Theme (Removido) ========================== */
-    // A lógica de tema foi removida para forçar o modo noturno.
-
-    /* ========================== Login ========================== */
-    const USERS = { "ezequiel": "Gois", "larissa":"7524" };
-
-    function showLogin(show){
-      $("#login-overlay").classList.toggle("hidden", !show);
-      $("#login-overlay").classList.toggle("flex", show); // Ajustado para flex
-      if (show) $("#login-user").focus();
-    }
-
-    function tryAutoLogin(){
-      try {
-        const raw = localStorage.getItem("sessionUser");
-        if (!raw) return false;
-        const sess = JSON.parse(raw);
-        if (!sess || !USERS[sess.user]) return false;
-        state.session = sess;
-        return true;
-      } catch(e){ return false; }
-    }
-
-    function login(user, pin){
-      user = (user||"").trim().toLowerCase();
-      pin = (pin||"").trim();
-      if (USERS[user] && USERS[user] === pin){
-        state.session = { user, ts: Date.now() };
-        localStorage.setItem("sessionUser", JSON.stringify(state.session));
-        showLogin(false);
-        toast("Bem-vindo!", "ok");
-        return true;
-      }
-      $("#login-msg").classList.remove("hidden");
-      $("#login-msg").textContent = "Usuário ou PIN inválidos.";
-      return false;
-    }
-
-    function logout(){
-      localStorage.removeItem("sessionUser");
-      state.session = null;
-      showLogin(true);
-    }
-
-    /* ========================== Data bindings ========================== */
-    function bindRealtime(){
-      // v11
-      onValue(ref(db, "settings"), (snap)=>{
-        const s = snap.val();
-        if (s) state.settings = {...state.settings, ...s};
-        $("#al1").value = state.settings.alertLevels[0];
-        $("#al2").value = state.settings.alertLevels[1];
-        $("#al3").value = state.settings.alertLevels[2];
-        $("#al4").value = state.settings.alertLevels[3];
-        $("#alP").value = state.settings.persistentAlarmMinutes;
-        $("#def-reason").value = state.settings.defaultReason || "";
-        $("#conf-reasons").value = state.settings.commonReasons || "Banheiro;Beber Água;Secretaria;Outro"; // (#7)
-      });
-
-      // v11
-      onValue(ref(db, "saidas"), (snap)=>{
-        const data = snap.val() || {};
-        state.requests = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        renderSaidas();
-      });
-
-      // v11
-      onValue(ref(db, "s5Teams"), (snap)=>{
-        const data = snap.val() || {};
-        state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        renderS5();
-      });
-
-      // (Novo) Listener para Chat
-      onValue(ref(db, "chatMessages"), (snap)=>{
-        const data = snap.val() || {};
-        state.chatMessages = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        // Ordenar por timestamp
-        state.chatMessages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-        renderChat();
-      });
-
-      // v11 (Novo - #6)
-      onValue(ref(db, "nomes_conhecidos"), (snap)=>{
-        const data = snap.val() || {};
-        state.knownNames = Object.keys(data);
-        renderDatalist();
-      });
-    }
-
-    /* ========================== Render Datalist (#6) ========================== */
-    function renderDatalist() {
-        const dl = $("#datalist-nomes");
-        dl.innerHTML = "";
-        state.knownNames.forEach(name => {
-            dl.innerHTML += `<option value="${name}"></option>`;
-        });
-    }
-
-    /* ========================== Render Saídas (Atualizado) ========================== */
-    function renderSaidas(){
-      // Filtro da Fila (#8)
-      const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
-      const pending = pendingAll.filter(r => {
-        if (state.filaFilter === 'todos') return true;
-        if (state.filaFilter === 'pendentes') return r.status === 'pending';
-        if (state.filaFilter === 'liberados') return r.status === 'approved';
-        return true;
-      });
-
-      const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
-      $("#pending-count").textContent = pending.length.toString();
-
-      const pList = $("#pending-list");
-      pList.innerHTML = "";
-      if(pending.length===0){
-        pList.innerHTML = `<li class="text-sm opacity-70 italic">Nenhum item nesta visualização.</li>`;
-      }
-      const now = Date.now();
-
-      pending.forEach(req => {
-        const isApproved = req.status === "approved";
-        const li = document.createElement("li");
-        li.className = isApproved ? "approved-item" : "pending-item";
-        li.dataset.liId = req.id; // <-- CORREÇÃO APLICADA AQUI
-        
-        const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
-        const left = document.createElement("div");
-        
-        // Adicionado motivo
-        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
-        left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
-                          <div class="text-xs mt-0.5">` +
-                          (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
-                                      : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
-                        + `</div>`;
-        
-        const right = document.createElement("div");
-        right.className = "flex items-center gap-2";
-        
-        if (!isApproved){
-          right.innerHTML = `<button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
-                             <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>`;
-        } else {
-          right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>`;
-        }
-        // Adicionados botões de editar/excluir
-        right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
-                            <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
-        
-        // Botão Snooze (#9)
-        const elapsedMinutes = (now - new Date(req.departureTime || now).getTime()) / 60000;
-        if (isApproved && elapsedMinutes >= state.settings.alertLevels[3]) {
-            if (req.alarmeCiente) {
-                right.innerHTML += `<button class="btn-icon" data-act="unsnooze" data-id="${req.id}" title="Reativar Alarme Sonoro">🔈</button>`;
-            } else {
-                right.innerHTML += `<button class="btn-icon" data-act="snooze" data-id="${req.id}" title="Silenciar Alarme Sonoro">🔇</button>`;
-            }
-        }
-
-        li.append(left, right);
-        pList.appendChild(li);
-      });
-
-      const histBox = $("#history");
-      histBox.innerHTML = "";
-      const query = ($("#hist-search").value||"").toLowerCase();
-      const byDay = {};
-      history.forEach(r=>{
-        if (query && !r.userName.toLowerCase().includes(query)) return;
-        const d = new Date(r.requestTime||r.departureTime||Date.now());
-        const key = d.toLocaleDateString("pt-BR");
-        (byDay[key] ||= []).push(r);
-      });
-      const days = Object.keys(byDay).sort((a,b)=>{
-        const da = new Date(a.split("/").reverse().join("-"));
-        const db = new Date(b.split("/").reverse().join("-"));
-        return db-da;
-      });
-      if (days.length===0){
-        histBox.innerHTML = `<div class="text-sm opacity-70 italic">Histórico vazio.</div>`;
-      }
-      days.forEach(day=>{
-        const hdr = document.createElement("div");
-        hdr.className = "rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 px-3 py-2 font-extrabold flex items-center justify-between cursor-pointer";
-        hdr.textContent = day;
-        hdr.dataset.day = day; // Adicionado para o listener de clique
-        const caret = document.createElement("span"); caret.textContent = "▼"; caret.className = "transition-transform"; hdr.append(caret);
-        const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2";
-
-        byDay[day].sort((a,b)=>(new Date(b.requestTime||b.departureTime))-(new Date(a.requestTime||a.departureTime))).forEach(r=>{
-          const li = document.createElement("li");
-          li.className = "flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/40 py-1";
-          const t1 = r.requestTime ? new Date(r.requestTime).toLocaleTimeString("pt-BR") : "";
-          const t_dep = r.departureTime ? new Date(r.departureTime).toLocaleTimeString("pt-BR") : "";
-          const t_ret = r.returnTime ? new Date(r.returnTime).toLocaleTimeString("pt-BR") : "";
-          
-          const status = r.status==="completed" ? "Liberado" : (r.status === "rejected" ? "Recusado" : "Pendente");
-          const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
-          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
-
-          li.innerHTML = `<div class="min-w-0 truncate">
-                            <b>${r.userName}</b> — <span class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</span>
-                            <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
-                            <br><span class="text-xs opacity-80">Motivo: ${reason}</span>
-                          </div>
-                          <div class="flex gap-1">
-                            <button class="btn-icon" data-act="edit-saida" data-id="${r.id}">✏️</button>
-                            <button class="btn-icon" data-act="del-saida" data-id="${r.id}">🗑</button>
-                          </div>`;
-          list.appendChild(li);
-        });
-        // Removido listener de clique daqui, movido para bindEvents
-        histBox.append(hdr, list);
-      });
-    }
-
-    /* ========================== Render S5 (Atualizado) ========================== */
-    function renderS5(){
-      const ul = $("#s5-list");
-      ul.innerHTML = "";
-      if (state.s5Teams.length===0){
-        ul.innerHTML = `<li class="text-sm opacity-70 italic">Nenhuma equipe 5S registrada.</li>`;
-        return;
-      }
-      state.s5Teams.forEach(team=>{
-        const li = document.createElement("li");
-        li.className = `flex items-center justify-between rounded-xl p-3 border ${team.isCompleted?'bg-emerald-50 border-emerald-400':'bg-rose-50 border-rose-400'} dark:border-transparent dark:${team.isCompleted?'bg-emerald-900/20':'bg-rose-900/20'}`;
-        const list = [team.person1,team.person2,team.person3,team.person4].filter(Boolean).join(", ");
-        const label = document.createElement("div");
-        const reg = new Date(team.registrationTime||Date.now()).toLocaleDateString("pt-BR");
-        // Adicionado render de Notas (#10)
-        label.innerHTML = `<div class="font-extrabold">${reg} — ${team.shift}</div>
-                           <div class="text-sm opacity-80">${list}</div>` +
-                           (team.notes ? `<div class="text-xs opacity-70 mt-2 p-2 bg-slate-100 dark:bg-slate-700/50 rounded-md w-full"><b>Nota:</b> ${team.notes.replace(/\n/g, '<br>')}</div>` : '');
-        
-        const right = document.createElement("div");
-        right.className = "flex items-center gap-2";
-        
-        const chk = document.createElement("input");
-        chk.type = "checkbox"; chk.checked = !!team.isCompleted;
-        chk.addEventListener("change", ()=> update(ref(db, "s5Teams/"+team.id), { isCompleted: chk.checked })); // v11
-        
-        // Adicionados botões de editar/excluir
-        const editBtn = document.createElement("button");
-        editBtn.className = "btn-icon";
-        editBtn.textContent = "✏️";
-        editBtn.dataset.act = "edit-s5";
-        editBtn.dataset.id = team.id;
-        
-        const delBtn = document.createElement("button");
-        delBtn.className = "btn-icon";
-        delBtn.textContent = "🗑";
-        delBtn.dataset.act = "del-s5";
-        delBtn.dataset.id = team.id;
-
-        right.append(chk, editBtn, delBtn);
-        li.append(label,right);
-        ul.appendChild(li);
-      });
-    }
-
-    /* ========================== Render Chat (Novo) ========================== */
-    function renderChat() {
-        const box = $("#chat-box");
-        box.innerHTML = "";
-        if (state.chatMessages.length === 0) {
-            box.innerHTML = `<p class="text-sm opacity-70 italic">Nenhuma mensagem ainda. Comece a conversa!</p>`;
-            return;
-        }
-
-        const currentUser = state.session ? state.session.user : null; // Pega o utilizador logado (ex: "ezequiel")
-
-        state.chatMessages.forEach(msg => {
-            const msgEl = document.createElement("div");
-            const msgUser = msg.user || "Anônimo";
-            const isSent = (msgUser === currentUser);
-            msgEl.className = `chat-msg ${isSent ? 'sent' : 'received'}`;
-            
-            const bubble = document.createElement("div");
-            bubble.className = "chat-msg-bubble";
-            bubble.textContent = msg.text || "";
-            
-            const userLabel = document.createElement("span");
-            userLabel.className = "chat-msg-user";
-            
-            // Mostra "Você" ou o nome do usuário (capitalizado)
-            userLabel.textContent = isSent ? "Você" : cleanName(msgUser); 
-
-            msgEl.append(userLabel, bubble);
-
-            // Adicionar botões de ação (Novo)
-            if (isSent) {
-                const actionsDiv = document.createElement("div");
-                actionsDiv.className = "chat-msg-actions";
-                actionsDiv.innerHTML = `
-                    <button class="btn-secondary btn-icon" data-act="edit-chat" data-id="${msg.id}">✏️</button>
-                    <button class="btn-danger btn-icon" data-act="del-chat" data-id="${msg.id}">🗑</button>
-                `;
-                msgEl.appendChild(actionsDiv);
-            }
-
-            box.appendChild(msgEl);
-        });
-
-        // Auto-scroll para o final
-        box.scrollTop = box.scrollHeight;
-    }
-
-    /* ========================== Actions (Saídas) ========================== */
-    function addStudent(){
-      const name = cleanName($("#input-name").value);
-      if (!name) return toast("Digite o nome do aluno.", "error");
-
-      // Salva o nome para Autocomplete (#6)
-      set(ref(db, "nomes_conhecidos/" + name), true);
-
-      // v11
-      push(ref(db, "saidas"), {
-        userName: name,
-        status: "pending",
-        requestTime: new Date().toISOString()
-      }).then(()=>{
-        $("#input-name").value = "";
-        toast(`"${name}" adicionado à fila.`, "ok");
-      });
-    }
-
-    function approve(id){
-      // v11
-      update(ref(db, "saidas/"+id), {
-        status: "approved",
-        departureTime: new Date().toISOString(),
-        reason: state.settings.defaultReason || "Banheiro",
-        alarmeCiente: false // (#9) Reseta o snooze ao aprovar
-      });
-    }
-    function reject(id){
-      // v11
-      update(ref(db, "saidas/"+id), {
-        status: "rejected",
-        returnTime: new Date().toISOString(),
-        reason: "Recusado/Cancelado"
-      });
-    }
-    function arrived(id){
-      // v11
-      update(ref(db, "saidas/"+id), {
-        status: "completed",
-        returnTime: new Date().toISOString(),
-        alarmeCiente: false // (#9) Limpa o snooze
-      });
-    }
-    async function removeReq(id){
-      const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída?");
-      if (!ok) return;
-      remove(ref(db, "saidas/"+id)); // v11
-      toast("Registro excluído.", "ok");
-    }
-
-    // (Atualizado - #7 Motivos)
-    function openEditSaidaModal(id) {
-      const req = state.requests.find(r => r.id === id);
-      if (!req) return toast("Registro não encontrado.", "error");
-
-      state.editingItemId = id;
-      const currentReason = req.reason || (req.status === 'approved' || req.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : '');
-      
-      const requestTimeLocal = formatDateTimeLocal(req.requestTime);
-      const departureTimeLocal = formatDateTimeLocal(req.departureTime);
-      const returnTimeLocal = formatDateTimeLocal(req.returnTime);
-
-      // Lógica de Motivos (#7)
-      const reasons = (state.settings.commonReasons || "Banheiro;Outro").split(';').filter(Boolean);
-      let isCommonReason = reasons.includes(currentReason);
-      if (!isCommonReason && currentReason && !reasons.includes("Outro")) {
-        reasons.push("Outro"); // Garante que "Outro" esteja lá se o motivo for customizado
-      } else if (!reasons.includes("Outro")) {
-        reasons.push("Outro"); // Garante que "Outro" esteja sempre como opção
-      }
-      
-      let reasonHtml = `<div class="field">
-                          <label>Motivo</label>
-                          <select id="edit-saida-reason-select" class="input">`;
-
-      reasons.forEach(r => {
-          const selected = (r === currentReason) || (r === "Outro" && !isCommonReason && currentReason);
-          reasonHtml += `<option value="${r}" ${selected ? 'selected' : ''}>${r}</option>`;
-      });
-      
-      reasonHtml += `</select>
-                  </div>
-                  <div class="field" id="other-reason-field" ${!isCommonReason && currentReason ? '' : 'style="display: none;"'}>
-                      <label>Outro Motivo</label>
-                      <input id="edit-saida-reason-text" class="input" value="${isCommonReason ? '' : currentReason}">
-                  </div>`;
-
-
-      const content = `
-        <div class="field">
-          <label>Nome do Aluno</label>
-          <input id="edit-saida-name" class="input" value="${req.userName}">
-        </div>
-        ${reasonHtml}
-        <div class="field">
-          <label>Hora de Solicitação</label>
-          <input id="edit-request-time" type="datetime-local" class="input" value="${requestTimeLocal}">
-        </div>
-        <div class="field">
-          <label>Hora de Saída</label>
-          <input id="edit-departure-time" type="datetime-local" class="input" value="${departureTimeLocal}">
-        </div>
-        <div class="field">
-          <label>Hora de Retorno</label>
-          <input id="edit-return-time" type="datetime-local" class="input" value="${returnTimeLocal}">
-        </div>
-      `;
-      openModal("Editar Saída", content, () => saveSaida(id));
-
-      // Adiciona listener para o select de motivos
-      $("#edit-saida-reason-select").addEventListener("change", (e) => {
-          $("#other-reason-field").style.display = (e.target.value === 'Outro') ? 'block' : 'none';
-          if (e.target.value === 'Outro') {
-            $("#edit-saida-reason-text").focus();
-          }
-      });
-    }
-
-    // (Atualizado - #7 Motivos)
-    function saveSaida(id) {
-      const name = cleanName($("#edit-saida-name").value);
-      
-      // Lógica de Motivos (#7)
-      const reasonSelect = $("#edit-saida-reason-select").value;
-      let finalReason = reasonSelect;
-      if (reasonSelect === "Outro") {
-          finalReason = ($("#edit-saida-reason-text").value || "").trim() || "Outro";
-      }
-
-      const requestTime = parseDateTimeLocal($("#edit-request-time").value);
-      const departureTime = parseDateTimeLocal($("#edit-departure-time").value);
-      const returnTime = parseDateTimeLocal($("#edit-return-time").value);
-
-      if (!name) return toast("O nome não pode ficar em branco.", "error");
-
-      const updates = {
-        userName: name,
-        reason: finalReason, // Salva o motivo correto
-        requestTime: requestTime,
-        departureTime: departureTime,
-        returnTime: returnTime,
-      };
-
-      // Limpar campos de tempo se estiverem vazios
-      if (!requestTime) updates.requestTime = null;
-      if (!departureTime) updates.departureTime = null;
-      if (!returnTime) updates.returnTime = null;
-      
-      // Ajustar status com base nos horários preenchidos
-      const currentReq = state.requests.find(r => r.id === id);
-      if (updates.returnTime) { // Se tem retorno, está completo
-          updates.status = "completed";
-      } else if (updates.departureTime) { // Se tem saída mas não retorno, está aprovado
-          updates.status = "approved";
-      } else { // Se não tem saída nem retorno, está pendente
-          updates.status = "pending";
-      }
-      // Se era 'rejected' e agora tem saída/retorno, mude o status.
-      // Se continua sem saída/retorno E tinha sido rejeitado, mantenha rejeitado.
-      if (currentReq.status === 'rejected' && !updates.departureTime && !updates.returnTime) {
-          updates.status = "rejected";
-      }
-
-
-      update(ref(db, "saidas/" + id), updates).then(() => {
-        toast("Registro atualizado!", "ok");
-        closeModal();
-      });
-    }
-
-    /* ========================== Actions (S5) (Novas) ========================== */
-    function addS5Team() {
-      const p = ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].map(sel => cleanName($(sel).value));
-      const payload = {
-        person1: p[0] || "Vago",
-        person2: p[1] || "Vago",
-        person3: p[2] || "Vago",
-        person4: p[3] || "Vago",
-        shift: $("#s5-shift").value,
-        isCompleted: false,
-        registrationTime: new Date().toISOString(),
-        notes: ($("#s5-notes").value || "").trim() // (#10)
-      };
-      push(ref(db, "s5Teams"), payload).then(() => { // v11
-        ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].forEach(sel => $(sel).value = "");
-        $("#s5-notes").value = ""; // Limpa notas
-        toast("Equipe adicionada.", "ok");
-      });
-    }
-
-    async function removeS5Team(id) {
-      const ok = await confirmBox("Tem certeza que deseja excluir esta equipe 5S?");
-      if (!ok) return;
-      remove(ref(db, "s5Teams/" + id)); // v11
-      toast("Equipe excluída.", "ok");
-    }
-
-    // (Atualizado - #10 Notas)
-    function openEditS5Modal(id) {
-      const team = state.s5Teams.find(t => t.id === id);
-      if (!team) return toast("Equipe não encontrada.", "error");
-
-      state.editingItemId = id;
-      const content = `
-        <div class="field">
-          <label>Pessoa 1</label>
-          <input id="edit-s5-p1" class="input" value="${team.person1 || ''}">
-        </div>
-        <div class="field">
-          <label>Pessoa 2</label>
-          <input id="edit-s5-p2" class="input" value="${team.person2 || ''}">
-        </div>
-        <div class="field">
-          <label>Pessoa 3</label>
-          <input id="edit-s5-p3" class="input" value="${team.person3 || ''}">
-        </div>
-        <div class="field">
-          <label>Pessoa 4</label>
-          <input id="edit-s5-p4" class="input" value="${team.person4 || ''}">
-        </div>
-        <div class="field">
-          <label>Turno</label>
-          <select id="edit-s5-shift" class="input">
-            <option ${team.shift === 'Manhã' ? 'selected' : ''}>Manhã</option>
-            <option ${team.shift === 'Tarde' ? 'selected' : ''}>Tarde</option>
-            <option ${team.shift === 'Noite' ? 'selected' : ''}>Noite</option>
-          </select>
-        </div>
-        <!-- Notas 5S (#10) -->
-        <div class="field sm:col-span-2">
-          <label>Observações</label>
-          <textarea id="edit-s5-notes" class="input" rows="3" placeholder="Ex: Concluído, mas lixeira do Setor B cheia.">${team.notes || ''}</textarea>
-        </div>
-      `;
-      openModal("Editar Equipe 5S", content, () => saveS5Team(id));
-    }
-
-    // (Atualizado - #10 Notas)
-    function saveS5Team(id) {
-      const p = ["#edit-s5-p1", "#edit-s5-p2", "#edit-s5-p3", "#edit-s5-p4"].map(sel => cleanName($(sel).value));
-      const payload = {
-        person1: p[0] || "Vago",
-        person2: p[1] || "Vago",
-        person3: p[2] || "Vago",
-        person4: p[3] || "Vago",
-        shift: $("#edit-s5-shift").value,
-        notes: ($("#edit-s5-notes").value || "").trim() // Salva as notas
-      };
-
-      update(ref(db, "s5Teams/" + id), payload).then(() => {
-        toast("Equipe atualizada!", "ok");
-        closeModal();
-      });
-    }
-
-    /* ========================== Actions (Chat - Novo) ========================== */
-    function sendChatMessage() {
-        const input = $("#chat-input");
-        const text = input.value.trim();
-        if (!text) return;
-        
-        const currentUser = state.session ? state.session.user : null;
-        if (!currentUser) {
-            return toast("Você precisa estar logado para enviar mensagens.", "error");
-        }
-
-        const payload = {
-            user: currentUser, // Salva o nome de usuário (ex: "ezequiel")
-            text: text,
-            timestamp: new Date().toISOString()
-        };
-
-        push(ref(db, "chatMessages"), payload).then(() => {
-            input.value = "";
-            // O onValue vai atualizar a UI, mas podemos forçar o scroll
-            $("#chat-box").scrollTop = $("#chat-box").scrollHeight;
-        }).catch(err => {
-            toast("Erro ao enviar mensagem.", "error");
-        });
-    }
-
-    async function deleteChatMessage(id) {
-        const msg = state.chatMessages.find(m => m.id === id);
-        // Segurança extra: verificar se o utilizador é o dono
-        if (msg && msg.user === state.session.user) {
-          const ok = await confirmBox("Tem certeza que deseja excluir esta mensagem?");
-          if (ok) {
-              remove(ref(db, "chatMessages/" + id));
-              toast("Mensagem excluída.", "ok");
-          }
-        }
-    }
-
-    function openEditChatMessageModal(id) {
-        const msg = state.chatMessages.find(m => m.id === id);
-        if (!msg || msg.user !== state.session.user) return toast("Mensagem não encontrada.", "error");
-
-        const content = `
-            <div class="field">
-              <label>Editar Mensagem</label>
-              <textarea id="edit-chat-text" class="input" rows="3">${msg.text}</textarea>
-            </div>
-        `;
-        openModal("Editar Mensagem", content, () => saveChatMessage(id));
-    }
-
-    function saveChatMessage(id) {
-        const newText = $("#edit-chat-text").value.trim();
-        if (newText) {
-            update(ref(db, "chatMessages/" + id), { text: newText });
-            toast("Mensagem atualizada!", "ok");
-            closeModal();
-        } else {
-            toast("A mensagem não pode ficar vazia.", "error");
-        }
-    }
-    
-    async function clearAllChatMessages() {
-        const ok = await confirmBox("TEM CERTEZA? Isso irá apagar TODAS as mensagens do chat para TODOS os usuários.");
-        if (ok) {
-            remove(ref(db, "chatMessages"));
-            toast("Histórico do chat foi limpo.", "ok");
-        }
-    }
-
-    /* ========================== Settings ========================== */
-    function saveSettings(){
-      const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
-      const pers = parseInt($("#alP").value,10);
-      if (vals.some(v=>!v||v<=0) || !pers || pers<=0){
-        return toast("Valores inválidos.", "error");
-      }
-      for (let i=0;i<vals.length-1;i++){
-        if (vals[i] >= vals[i+1]) return toast("Alertas devem ser crescentes.", "error");
-      }
-      if (vals[vals.length-1] >= pers) return toast("Alarme contínuo deve ser maior que o 4º alerta.", "error");
-      const payload = {
-        alertLevels: vals,
-        persistentAlarmMinutes: pers,
-        defaultReason: $("#def-reason").value || "Banheiro",
-        commonReasons: ($("#conf-reasons").value || "").trim() // (#7)
-      };
-      set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok")); // v11
-    }
-
-    /* ========================== Backup / Reset ========================== */
-    async function downloadBackup(){
-      // 'themeSnap' removido
-      const [saidasSnap, s5Snap, confSnap, chatSnap, nomesSnap] = await Promise.all([ // chatSnap e nomesSnap adicionado
-        get(ref(db, "saidas")), // v11
-        get(ref(db, "s5Teams")), // v11
-        get(ref(db, "settings")), // v11
-        get(ref(db, "chatMessages")), // (Novo)
-        get(ref(db, "nomes_conhecidos")) // (#6)
-      ]);
-      const content = {
-        saidas: saidasSnap.val() || {},
-        s5Teams: s5Snap.val() || {},
-        settings: confSnap.val() || {},
-        chatMessages: chatSnap.val() || {}, // (Novo)
-        nomes_conhecidos: nomesSnap.val() || {}, // (#6)
-        // 'themeMode' removido
-        exportedAt: new Date().toISOString()
-      };
-      const blob = new Blob([JSON.stringify(content, null, 2)], {type:"application/json"});
-      const a = document.createElement("a");
-      a.href = URL.createObjectURL(blob);
-      a.download = `backup_gerenciador_${new Date().toISOString().slice(0,10)}.json`;
-      a.click();
-      URL.revokeObjectURL(a.href);
-    }
-    async function uploadBackup(file){
-      try{
-        const text = await file.text();
-        const data = JSON.parse(text);
-        if (!data || typeof data !== "object") throw new Error("Arquivo inválido.");
-        const ok = await confirmBox("Importar backup COMPLETO e substituir dados na nuvem?");
-        if (!ok) throw new Error("cancel");
-        
-        const tasks = [];
-        if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas)); // v11
-        if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams)); // v11
-        if (data.settings) tasks.push(set(ref(db, "settings"), data.settings)); // v11
-        if (data.chatMessages) tasks.push(set(ref(db, "chatMessages"), data.chatMessages)); // (Novo)
-        if (data.nomes_conhecidos) tasks.push(set(ref(db, "nomes_conhecidos"), data.nomes_conhecidos)); // (#6)
-        // 'themeMode' removido
-        await Promise.all(tasks);
-        toast("Backup importado!", "ok");
-      }catch(e){
-        if (e.message!=="cancel") toast("Falha ao importar.", "error");
-      }
-    }
-    async function resetAll(){
-      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chat, nomes, configs)?"); // Atualizado
-      if (!ok) return;
-      await Promise.all([
-        remove(ref(db, "saidas")), // v11
-        remove(ref(db, "s5Teams")), // v11
-        remove(ref(db, "settings")), // v11
-        remove(ref(db, "chatMessages")), // (Novo)
-        remove(ref(db, "nomes_conhecidos")) // (#6)
-      ]);
-      toast("Tudo resetado.", "ok");
-    }
-
-    /* ========================== Clock & alerts (Atualizado - #9) ========================== */
-    function startClock(){
-      if (state.timers.clock) clearInterval(state.timers.clock);
-      
-      // Limpar o timer de alerta anterior se existir
-      if (state.timers.alert) clearInterval(state.timers.alert);
-      state.timers.alert = null; 
-
-      state.timers.clock = setInterval(()=>{
-        const now = Date.now();
-        $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", {hour12:false});
-        
-        // Variável para tocar o bipe (no máximo 1 vez por segundo)
-        let shouldBeep = false;
-        const { alertLevels, persistentAlarmMinutes } = state.settings;
-
-        state.requests.forEach(r=>{
-          // Tenta encontrar o <li> pela <ul> principal
-          const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`); // <-- CORREÇÃO APLICADA AQUI
-
-          if (r.status==="pending"){
-            const durEl = document.querySelector(`[data-dur="${r.id}-wait"]`);
-            if (durEl) durEl.textContent = fmtDur(now - new Date(r.requestTime));
-          
-          } else if (r.status==="approved"){
-            const durEl = document.querySelector(`[data-dur="${r.id}-out"]`);
-            if (!r.departureTime) return; // Guarda de segurança
-            
-            const departureTime = new Date(r.departureTime).getTime();
-            const elapsedMs = now - departureTime;
-            if (durEl) durEl.textContent = fmtDur(elapsedMs);
-
-            // Lógica do Alarme (Nova)
-            const elapsedMinutes = elapsedMs / 60000;
-            
-            // Níveis de alerta
-            let alertClass = '';
-            if (elapsedMinutes >= alertLevels[0] && elapsedMinutes < alertLevels[1]) alertClass = 'alarm-level-1';
-            else if (elapsedMinutes >= alertLevels[1] && elapsedMinutes < alertLevels[2]) alertClass = 'alarm-level-2';
-            else if (elapsedMinutes >= alertLevels[2] && elapsedMinutes < alertLevels[3]) alertClass = 'alarm-level-3';
-            else if (elapsedMinutes >= alertLevels[3]) alertClass = 'alarm-level-4'; // Nível 4 ou persistente
-
-            // Aplicar classes de alerta no UI
-            if (el) {
-                el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
-                if(alertClass) el.classList.add(alertClass);
-            }
-            
-            // Lógica do Alarme Persistente
-            if (elapsedMinutes >= persistentAlarmMinutes) {
-              if (!state.alarmingStudents.has(r.id)) {
-                // Entrou no estado de alarme persistente
-                console.log(`Alarme persistente para: ${r.userName}`);
-                state.alarmingStudents.add(r.id);
-                if (!r.alarmeCiente) shouldBeep = true; // Toca o bipe na transição (se não silenciado)
-              }
-            } else {
-              // Se estava no alarme persistente mas saiu (ex: editou horário ou voltou)
-              if (state.alarmingStudents.has(r.id)) {
-                  state.alarmingStudents.delete(r.id);
-              }
-            }
-          } else {
-             // Se o status não é mais "approved" (ex: "completed"), remove do alarme
-             if (state.alarmingStudents.has(r.id)) {
-                state.alarmingStudents.delete(r.id);
-             }
-             // Remove classes de alarme se não estiver mais 'approved'
-             if (el) {
-                el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
-             }
-          }
-        });
-
-        // Tocar o bipe de transição (só na primeira vez)
-        if (shouldBeep) {
-            playBeep();
-        }
-
-      }, 1000); // O relógio principal atualiza a cada segundo
-
-      // Novo Timer: Alarme Persistente (toca a cada X segundos) (Atualizado - #9)
-      state.timers.alert = setInterval(() => {
-        if (state.alarmOn && state.alarmingStudents.size > 0) {
-            let shouldPlay = false;
-            // Verifica se algum aluno em alarme NÃO está silenciado
-            for (const studentId of state.alarmingStudents) {
-                const studentReq = state.requests.find(r => r.id === studentId);
-                if (studentReq && !studentReq.alarmeCiente) {
-                    shouldPlay = true;
-                    break;
-                }
-            }
-            
-            if (shouldPlay) {
-                console.log("Bipe de alarme persistente...");
-                playBeep();
-            }
-        }
-      }, 5000); // Toca o bipe a cada 5 segundos se houver alguém na lista
-    }
-
-
-    /* ========================== Tabs & Events (Atualizado) ========================== */
-    function activateTab(id){
-      $$(".tab-btn").forEach(b=>b.classList.remove("active"));
-      $$(".card").forEach(c=>c.classList.add("hidden"));
-      $(`[data-tab="${id}"]`).classList.add("active");
-      $(`#tab-${id}`).classList.remove("hidden");
-    }
-
-    function bindEvents(){
-      // Inicializador de Áudio (Novo)
-      // Chama na primeira interação
-      document.body.addEventListener('click', initAudio, { once: true });
-      document.body.addEventListener('input', initAudio, { once: true });
-
-      $("#btn-add").addEventListener("click", addStudent);
-      
-      // Listener unificado para "pending-list" (Atualizado - #9 Snooze)
-      $("#pending-list").addEventListener("click", (e)=>{
-        const btn = e.target.closest("button[data-act]");
-        if (!btn) return;
-        const act = btn.dataset.act, id = btn.dataset.id;
-        if (act==="approve") approve(id);
-        if (act==="reject") reject(id);
-        if (act==="return") arrived(id);
-        if (act==="del-saida") removeReq(id);
-        if (act==="edit-saida") openEditSaidaModal(id);
-        if (act==="snooze") update(ref(db, "saidas/"+id), { alarmeCiente: true });
-        if (act==="unsnooze") update(ref(db, "saidas/"+id), { alarmeCiente: false });
-      });
-
-      // Listener unificado para "history" (colapso e botões)
-      $("#history").addEventListener("click", (e)=>{
-        const btn = e.target.closest("button[data-act]");
-        if (btn){
-          e.stopPropagation(); // Impede que o clique no botão feche o acordeão
-          const act = btn.dataset.act, id = btn.dataset.id;
-          if (act==="del-saida") removeReq(id);
-          if (act==="edit-saida") openEditSaidaModal(id);
-          return;
-        }
-        
-        const hdr = e.target.closest("div[data-day]");
-        if(hdr) {
-          const list = hdr.nextElementSibling;
-          if(list) list.classList.toggle("hidden");
-          const caret = hdr.querySelector("span");
-          if(caret) caret.classList.toggle("rotate-180");
-        }
-      });
-      
-      $("#hist-search").addEventListener("input", renderSaidas);
-      
-      $("#s5-add").addEventListener("click", addS5Team);
-
-      // Listener unificado para "s5-list"
-      $("#s5-list").addEventListener("click", (e)=>{
-        const btn = e.target.closest("button[data-act]");
-        if (!btn) return;
-        const act = btn.dataset.act, id = btn.dataset.id;
-        if (act==="edit-s5") openEditS5Modal(id);
-        if (act==="del-s5") removeS5Team(id);
-      });
-
-      // (Novo) Eventos do Chat
-      $("#chat-send").addEventListener("click", sendChatMessage);
-      $("#chat-input").addEventListener("keypress", (e) => {
-          if (e.key === "Enter" && !e.shiftKey) { 
-              e.preventDefault(); // Impede nova linha
-              sendChatMessage();
-          }
-      });
-      // (Novo) Listener para botões do chat (editar/excluir)
-      $("#chat-box").addEventListener("click", (e) => {
-          const btn = e.target.closest("button[data-act]");
-          if (!btn) return;
-          const act = btn.dataset.act;
-          const id = btn.dataset.id;
-          if (act === "del-chat") deleteChatMessage(id);
-          if (act === "edit-chat") openEditChatMessageModal(id);
-      });
-      // (Novo) Listener para limpar chat
-      $("#chat-clear-btn").addEventListener("click", clearAllChatMessages);
-
-
-      $("#btn-save-settings").addEventListener("click", saveSettings);
-
-      // Data management
-      $("#ddm-header").addEventListener("click", ()=> {
-        $("#ddm").classList.toggle("hidden");
-        $("#ddm-caret").classList.toggle("rotate-180");
-      });
-      $("#btn-backup-download").addEventListener("click", downloadBackup);
-      $("#file-backup").addEventListener("change", (e)=> e.target.files[0] && uploadBackup(e.target.files[0]));
-      $("#btn-reset").addEventListener("click", resetAll);
-
-      // Tabs
-      $$(".tab-btn").forEach(b=> b.addEventListener("click", ()=> activateTab(b.dataset.tab)));
-
-      // (Novo) Controle do Alarme
-      $("#alarm-pill").addEventListener("click", () => {
-        state.alarmOn = !state.alarmOn;
-        const pill = $("#alarm-pill");
-        if (state.alarmOn) {
-            pill.textContent = "ALARME: LIGADO";
-            pill.classList.remove("bg-rose-200", "text-rose-800", "dark:bg-rose-800", "dark:text-rose-200");
-            pill.classList.add("bg-emerald-200", "text-emerald-800", "dark:bg-emerald-800", "dark:text-emerald-200");
-            toast("Alarmes ligados.", "ok");
-        } else {
-            pill.textContent = "ALARME: DESLIGADO";
-            pill.classList.add("bg-rose-200", "text-rose-800", "dark:bg-rose-800", "dark:text-rose-200");
-            pill.classList.remove("bg-emerald-200", "text-emerald-800", "dark:bg-emerald-800", "dark:text-emerald-200");
-            toast("Alarmes silenciados.", "info");
-        }
-      });
-
-      // Filtros da Fila (#8)
-      $("#fila-filter-buttons").addEventListener('click', (e) => {
-          const filterBtn = e.target.closest('[data-fila-filter]');
-          if (filterBtn) {
-              $$('#fila-filter-buttons button').forEach(b => {
-                  b.classList.remove('btn-primary', 'active');
-                  b.classList.add('btn-secondary'); // Garante que é secondary
-              });
-              filterBtn.classList.add('btn-primary', 'active');
-              filterBtn.classList.remove('btn-secondary');
-              state.filaFilter = filterBtn.dataset.filaFilter;
-              renderSaidas();
-          }
-      });
-
-      // Login
-      $("#login-btn").addEventListener("click", ()=> {
-        initAudio(); // Garante que o áudio funcione após o login
-        login($("#login-user").value, $("#login-pin").value)
-      });
-      $("#logout-btn").addEventListener("click", logout);
-    }
-
-    /* ========================== Boot ========================== */
-    function boot(){
-      // initTheme() removido
-      if (!tryAutoLogin()) showLogin(true);
-      bindEvents();
-      bindRealtime();
-      startClock();
-      activateTab("saidas");
-    }
-
-    // Iniciar a aplicação
-    boot();
-  </script>
 </body>
 </html>
-
-
 
