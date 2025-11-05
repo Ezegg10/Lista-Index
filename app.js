@@ -315,8 +315,33 @@ function bindRealtime(){
 }
 
 /* ========================== Render Saídas ========================== */
+// Em 'Render Saídas'
+
 function renderSaídas(){
   const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
+  
+  // +++ INÍCIO DA MODIFICAÇÃO (Adicionar Ordenação) +++
+  pendingAll.sort((a, b) => {
+    // 1. Itens pendentes sempre vêm antes dos aprovados
+    if (a.status === 'pending' && b.status === 'approved') return -1;
+    if (a.status === 'approved' && b.status === 'pending') return 1;
+
+    // 2. Se ambos forem "pending", ordenar por prioridade (ou requestTime se prioridade não existir)
+    if (a.status === 'pending') {
+        const priA = a.priority || new Date(a.requestTime).getTime();
+        const priB = b.priority || new Date(b.requestTime).getTime();
+        return priA - priB; // Ordenação ascendente (mais antigo/maior prioridade primeiro)
+    }
+
+    // 3. Se ambos forem "approved", ordenar por hora de saída (o que saiu há mais tempo primeiro)
+    if (a.status === 'approved') {
+        return new Date(a.departureTime) - new Date(b.departureTime);
+    }
+    
+    return 0;
+  });
+  // +++ FIM DA MODIFICAÇÃO (Adicionar Ordenação) +++
+
   const pending = pendingAll.filter(r => {
     if (state.filaFilter === 'todos') return true;
     if (state.filaFilter === 'pendentes') return r.status === 'pending';
@@ -324,55 +349,55 @@ function renderSaídas(){
     return true;
   });
 
-  const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
-  $("#pending-count").textContent = pending.length.toString();
-
-  const pList = $("#pending-list");
-  pList.innerHTML = "";
-  if(pending.length===0){
-    pList.innerHTML = `<li class="text-sm opacity-70 italic">Nenhum item nesta visualização.</li>`;
-  }
+  // ... (código do pending-count e pList.innerHTML não muda) ...
   const now = Date.now();
 
-  pending.forEach(req => {
+  // Modifique o forEach para incluir o 'index'
+  pending.forEach((req, index) => { // <--- MODIFICAÇÃO (adicionar index)
     const isApproved = req.status === "approved";
     const li = document.createElement("li");
-    li.className = isApproved ? "approved-item" : "pending-item";
-    li.dataset.liId = req.id;
+    // ... (código do 'li.className' e 'timeStr' não muda) ...
     
-    const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
     const left = document.createElement("div");
-    
-    const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
-    left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
-                      <div class="text-xs mt-0.5">` +
-                      (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
-                                  : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
-                    + `</div>`;
+    // ... (código do 'left.innerHTML' não muda) ...
     
     const right = document.createElement("div");
     right.className = "flex items-center gap-2";
     
+    // +++ INÍCIO DA MODIFICAÇÃO (Adicionar botões de mover) +++
     if (!isApproved){
-      right.innerHTML = `<button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
+      let moveButtons = '';
+      
+      // Botão de Subir: só aparece se NÃO for o primeiro E o de cima também for 'pending'
+      const hasPendingAbove = index > 0 && pending[index - 1].status === 'pending';
+      if (hasPendingAbove) {
+          moveButtons += `<button class="btn-icon" data-act="move-up" data-id="${req.id}" title="Mover para Cima">⬆️</button>`;
+      } else {
+          // Adiciona um espaço para manter o alinhamento
+          moveButtons += `<span class="w-[38px] h-[38px] inline-block"></span>`;
+      }
+      
+      // Botão de Descer: só aparece se NÃO for o último E o de baixo também for 'pending'
+      const hasPendingBelow = (index < pending.length - 1) && pending[index + 1].status === 'pending';
+      if (hasPendingBelow) {
+          moveButtons += `<button class="btn-icon" data-act="move-down" data-id="${req.id}" title="Mover para Baixo">⬇️</button>`;
+      } else {
+          // Adiciona um espaço
+          moveButtons += `<span class="w-[38px] h-[38px] inline-block"></span>`;
+      }
+
+      right.innerHTML = `${moveButtons}
+                         <button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
                          <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>`;
     } else {
       right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>`;
     }
+    // +++ FIM DA MODIFICAÇÃO +++
+
     right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
                         <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
     
-    const elapsedMinutes = (now - new Date(req.departureTime || now).getTime()) / 60000;
-    if (isApproved && elapsedMinutes >= state.settings.alertLevels[3]) {
-        if (req.alarmeCiente) {
-            right.innerHTML += `<button class="btn-icon" data-act="unsnooze" data-id="${req.id}" title="Reativar Alarme Sonoro">🔈</button>`;
-        } else {
-            right.innerHTML += `<button class="btn-icon" data-act="snooze" data-id="${req.id}" title="Silenciar Alarme Sonoro">🔇</button>`;
-        }
-    }
-
-    li.append(left, right);
-    pList.appendChild(li);
+    // ... (resto da função renderSaídas não muda) ...
   });
 
   const histBox = $("#history");
@@ -515,6 +540,58 @@ function renderChat() {
 }
 
 /* ========================== Actions (Saídas) ========================== */
+// Em 'Actions (Saídas)'
+
+// Esta é uma função auxiliar para pegar a lista de pendentes ORDENADA
+function getSortedPendingList() {
+    return state.requests
+        .filter(r => r.status === 'pending')
+        .sort((a, b) => {
+            // Usa a prioridade ou o tempo de requisição como fallback
+            const priA = a.priority || new Date(a.requestTime).getTime();
+            const priB = b.priority || new Date(b.requestTime).getTime();
+            return priA - priB;
+        });
+}
+
+// Função para mover um item para CIMA
+function moveUp(id) {
+    const sortedPending = getSortedPendingList();
+    const currentIndex = sortedPending.findIndex(r => r.id === id);
+    
+    if (currentIndex <= 0) return; // Já é o primeiro ou não foi encontrado
+
+    const itemCurrent = sortedPending[currentIndex];
+    const itemAbove = sortedPending[currentIndex - 1];
+
+    // Pega as prioridades (ou fallback)
+    const priCurrent = itemCurrent.priority || new Date(itemCurrent.requestTime).getTime();
+    const priAbove = itemAbove.priority || new Date(itemAbove.requestTime).getTime();
+
+    // Troca as prioridades no banco de dados
+    update(ref(db, "saidas/" + itemCurrent.id), { priority: priAbove });
+    update(ref(db, "saidas/" + itemAbove.id), { priority: priCurrent });
+}
+
+// Função para mover um item para BAIXO
+function moveDown(id) {
+    const sortedPending = getSortedPendingList();
+    const currentIndex = sortedPending.findIndex(r => r.id === id);
+
+    if (currentIndex < 0 || currentIndex >= sortedPending.length - 1) return; // Já é o último
+
+    const itemCurrent = sortedPending[currentIndex];
+    const itemBelow = sortedPending[currentIndex + 1];
+
+    // Pega as prioridades (ou fallback)
+    const priCurrent = itemCurrent.priority || new Date(itemCurrent.requestTime).getTime();
+    const priBelow = itemBelow.priority || new Date(itemBelow.requestTime).getTime();
+
+    // Troca as prioridades no banco de dados
+    update(ref(db, "saidas/" + itemCurrent.id), { priority: priBelow });
+    update(ref(db, "saidas/" + itemBelow.id), { priority: priCurrent });
+}
+
 function addStudent(){
   const name = cleanName($("#input-name").value);
   if (!name) return toast("Digite o nome do aluno.", "error");
@@ -522,13 +599,13 @@ function addStudent(){
   push(ref(db, "saidas"), {
     userName: name,
     status: "pending",
-    requestTime: new Date().toISOString()
+    requestTime: new Date().toISOString(),
+    priority: Date.now() // <--- ADICIONE ESTA LINHA
   }).then(()=>{
     $("#input-name").value = "";
     toast(`"${name}" adicionado à fila.`, "ok");
   });
 }
-
 function approve(id){
   update(ref(db, "saidas/"+id), {
     status: "approved",
@@ -981,12 +1058,11 @@ function activateTab(id){
   $(`#tab-${id}`).classList.remove("hidden");
 }
 
-function bindEvents(){
-  document.body.addEventListener('click', initAudio, { once: true });
-  document.body.addEventListener('input', initAudio, { once: true });
+// Em 'Tabs & Events'
 
-  $("#btn-add").addEventListener("click", addStudent);
-  
+function bindEvents(){
+  // ... (código do initAudio e btn-add não muda) ...
+
   $("#pending-list").addEventListener("click", (e)=>{
     const btn = e.target.closest("button[data-act]");
     if (!btn) return;
@@ -998,6 +1074,9 @@ function bindEvents(){
     if (act==="edit-saida") openEditSaidaModal(id);
     if (act==="snooze") update(ref(db, "saidas/"+id), { alarmeCiente: true });
     if (act==="unsnooze") update(ref(db, "saidas/"+id), { alarmeCiente: false });
+    // +++ ADICIONE ESTAS DUAS LINHAS +++
+    if (act==="move-up") moveUp(id);
+    if (act==="move-down") moveDown(id);
   });
 
   $("#history").addEventListener("click", (e)=>{
