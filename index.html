@@ -38,9 +38,21 @@
 
 
   <style>
-    :root{--border:rgba(148,163,184,.35)}
+    :root{
+      --border:rgba(148,163,184,.35);
+      --bg-primary: #fff;
+      --bg-secondary: #f8fafc;
+      --bg-card: #fff;
+    }
+    .dark {
+      --border:rgba(148,163,184,.25);
+      --bg-primary: #0b1220;
+      --bg-secondary: #131b2b;
+      --bg-card: #0b1220;
+    }
+
     *{outline:0}
-    .input{border:1px solid var(--border);border-radius:12px;padding:.65rem .8rem;background:#fff;color:#0f172a;transition:all .2s}
+    .input{border:1px solid var(--border);border-radius:12px;padding:.65rem .8rem;background:var(--bg-primary);color:var(--text-primary);transition:all .2s}
     .dark .input{background:#0b1220;color:#f8fafc;border-color:rgba(148,163,184,.25)}
     .input:focus{box-shadow:0 0 0 3px rgba(37,99,235,.2);border-color:#2563eb}
     .btn-primary{background:#2563eb;color:#fff;border-radius:12px;padding:.65rem .95rem;font-weight:800;transition:transform .05s ease;box-shadow:0 10px 25px -10px rgba(37,99,235,.6)}
@@ -50,37 +62,59 @@
     .dark .btn-secondary{background:#0b1220}
     .btn-danger{background:#ef4444;color:#fff;border-radius:12px;padding:.6rem .9rem;font-weight:800}
     .btn-ghost{border:1px solid var(--border);border-radius:12px;padding:.5rem .8rem;font-weight:700;background:transparent}
-    /* Botão de ícone adicionado */
     .btn-icon{border:1px solid var(--border);border-radius:12px;padding: .5rem; font-weight:700;background:transparent;line-height:1; min-width: 38px; text-align: center;}
     .btn-icon:hover, .btn-ghost:hover { background-color: rgba(148,163,184,.1); }
     .dark .btn-icon:hover, .dark .btn-ghost:hover { background-color: rgba(148,163,184,.2); }
     
-    .card{border:1px solid var(--border);background:#fff;border-radius:16px;padding:1rem 1rem 1.25rem 1rem;box-shadow:0 10px 25px -12px rgba(0,0,0,.25)}
+    .card{border:1px solid var(--border);background:var(--bg-card);border-radius:16px;padding:1rem 1rem 1.25rem 1rem;box-shadow:0 10px 25px -12px rgba(0,0,0,.25)}
     .dark .card{background:#0b1220}
+    
+    .card-chat {
+      padding: 0;
+      height: 70vh; 
+      display: flex;
+      overflow: hidden;
+    }
+    
     .section-title{font-weight:800}
     .badge{background:#fde68a;color:#78350f;border-radius:9999px;padding:.1rem .55rem;font-size:.75rem;font-weight:800}
     .field>label{display:block;font-size:.85rem;opacity:.8;margin-bottom:.25rem}
-    .tab-btn{border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;text-align:left;font-weight:800;background:transparent; display: flex; align-items: center; /* Modificado para ícones */}
+    .tab-btn{border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;text-align:left;font-weight:800;background:transparent; display: flex; align-items: center; position: relative; /* Para o badge */}
     .tab-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
+    
+    .notification-badge {
+      position: absolute;
+      top: 6px;
+      right: 8px;
+      background-color: #ef4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 800;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 2px solid #2563eb; /* Cor de fundo do botão ativo */
+    }
+    
     #toast{background:#111827;color:#fff;border-radius:9999px;padding:.6rem 1rem;font-weight:800;box-shadow:0 10px 25px -12px rgba(0,0,0,.35)}
     
-    /* === MELHORIA: Estilos para Arrastar e Soltar (Drag-n-Drop) === */
-    .pending-item, .approved-item { cursor: grab; /* Indica que é agarrável */ }
-    .pending-item:active, .approved-item:active { cursor: grabbing; } /* Ao arrastar */
-    .dragging { opacity: 0.5; } /* Estilo do item sendo arrastado */
+    .pending-item, .approved-item { cursor: grab; }
+    .pending-item:active, .approved-item:active { cursor: grabbing; }
+    .dragging { opacity: 0.5; }
     .drag-over-top { border-top: 2px dashed #2563eb !important; }
     .drag-over-bottom { border-bottom: 2px dashed #2563eb !important; }
-    /* ============================================================= */
 
     .pending-item{border-left:4px solid #f59e0b;background:#fffbeb;border-radius:12px;padding:.7rem .75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
     .approved-item{border-left:4px solid #22c55e;background:#ecfdf5;border-radius:12px;padding:.7rem .75rem;display:flex;align-items:center;justify-content:space-between;gap:.75rem}
     .dark .pending-item{background:#0f172a}
     .dark .approved-item{background:#052e1a}
     .hidden{display:none}
-    /* Classe de exibição do modal */
     #modal-overlay.flex { display: flex; }
 
-    /* Estilos de Alarme (Novo) */
+    /* Estilos de Alarme */
     @keyframes pulse-red {
       0%, 100% { background-color: #ef4444; color: white; }
       50% { background-color: #f87171; color: white; }
@@ -100,23 +134,94 @@
       border-color: #ef4444;
     }
 
-    /* Estilos do Chat (Novo) */
+    /* Estilos de Chat */
+    .chat-container {
+      display: flex;
+      width: 100%;
+      height: 100%;
+    }
+    .chat-sidebar {
+      width: 280px;
+      border-right: 1px solid var(--border);
+      background: var(--bg-secondary);
+      display: flex;
+      flex-direction: column;
+    }
+    .chat-sidebar-header {
+      padding: 0.75rem;
+      font-weight: 800;
+      border-bottom: 1px solid var(--border);
+    }
+    .chat-contact-list {
+      flex-grow: 1;
+      overflow-y: auto;
+    }
+    .chat-contact {
+      padding: 0.75rem 1rem;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+    }
+    .chat-contact:hover {
+      background: rgba(148,163,184,.1);
+    }
+    .chat-contact.active {
+      background: var(--bg-primary);
+      font-weight: 800;
+      color: #2563eb;
+    }
+    
+    .chat-main {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      background: var(--bg-primary);
+    }
+    .chat-main-header {
+      padding: 0.75rem 1rem;
+      font-weight: 800;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-secondary);
+    }
+    
+    .chat-box {
+      flex-grow: 1;
+      overflow-y: auto;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .chat-input-area {
+      border-top: 1px solid var(--border);
+      padding: 0.5rem;
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-secondary);
+    }
+    
     .chat-msg { position: relative; display: flex; flex-direction: column; }
     .chat-msg.sent { align-items: flex-end; }
     .chat-msg.received { align-items: flex-start; }
-    .chat-msg-bubble { max-w-xs; padding: .5rem .75rem; border-radius: 12px; word-wrap: break-word; }
+    
+    .chat-msg-bubble { 
+      max-w-xs; padding: .5rem .75rem; border-radius: 12px; 
+      word-wrap: break-word; font-size: 0.9rem;
+    }
     .chat-msg.sent .chat-msg-bubble { background: #2563eb; color: white; border-bottom-right-radius: 4px; }
-    .chat-msg.received .chat-msg-bubble { background: #e2e8f0; border-bottom-left-radius: 4px; }
-    .dark .chat-msg.received .chat-msg-bubble { background: #1e293b; color: #f8fafc; }
+    .chat-msg.received .chat-msg-bubble { background: #e2e8f0; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
+    .dark .chat-msg.received .chat-msg-bubble { background: #1e293b; color: #f8fafc; border-color: var(--border); }
+    
     .chat-msg-user { font-size: .75rem; font-weight: 800; opacity: .7; margin: 0 .25rem .1rem .25rem; }
     
-    /* === MELHORIA: Estilo do Timestamp do Chat === */
-    .chat-msg-time { font-size: .65rem; font-weight: 700; opacity: .6; margin: 0 .25rem; }
+    .chat-msg-time { 
+      font-size: .65rem; font-weight: 700; opacity: .6; 
+      margin: 0.1rem .25rem 0 .25rem;
+    }
     .chat-msg.sent .chat-msg-time { text-align: right; }
     .chat-msg.received .chat-msg-time { text-align: left; }
-    /* ================================================= */
 
-    /* Estilos de Edição/Exclusão do Chat (Novo) */
     .chat-msg-actions {
       position: absolute;
       top: 0;
@@ -136,6 +241,34 @@
       background-color: rgba(0,0,0,0.2);
     }
     .dark .chat-msg-actions button { background-color: rgba(255,255,255,0.2); }
+    
+    .presence-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 8px;
+      display: inline-block;
+      flex-shrink: 0; 
+    }
+    .online-dot {
+      background-color: #22c55e;
+      border: 1px solid rgba(255,255,255,0.5);
+      box-shadow: 0 0 5px #22c55e;
+    }
+    .offline-dot {
+      background-color: #94a3b8;
+      border: 1px solid rgba(0,0,0,0.1);
+    }
+    .chat-contact-details {
+      display: flex;
+      align-items: center;
+      min-width: 0; 
+    }
+    .chat-contact-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 
 </head>
@@ -193,10 +326,13 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
             Controle de Saídas
           </button>
+          
           <button class="tab-btn" data-tab="chat">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" /></svg>
             Chat
+            <span id="chat-notification-badge" class="notification-badge hidden">0</span> 
           </button>
+          
           <button class="tab-btn" data-tab="s5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h.01a1 1 0 100-2H10zm3 0a1 1 0 000 2h.01a1 1 0 100-2H13z" clip-rule="evenodd" /></svg>
             Gestão 5S
@@ -257,19 +393,28 @@
           </div>
         </div>
 
-        <div id="tab-chat" class="card hidden">
-          <div class="flex items-center justify-between mb-4">
-            <h2 class="text-xl font-bold">Chat Interno</h2>
-            <button id="chat-clear-btn" class="btn-danger btn-icon" title="Limpar todo o histórico do chat">🗑</button>
-          </div>
-          <div id="chat-box" class="h-64 overflow-y-auto border border-slate-200 dark:border-slate-700 rounded-lg p-3 mb-4 space-y-3">
-            <p class="text-sm opacity-70 italic">Carregando mensagens...</p>
-          </div>
-          <div class="flex gap-2">
-            <input id="chat-input" class="input flex-1" placeholder="Digite sua mensagem...">
-            <button id="chat-send" class="btn-primary px-5">
-              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 17V4.609a1 1 0 00-1.447-.894l-5 1.428zM10.894 2.553l7 14a1 1 0 001.169-1.409l-5-1.429A1 1 0 0013.825 17V4.609a1 1 0 00-1.447-.894l5 1.428z" /></svg>
-            </button>
+        <div id="tab-chat" class="card card-chat hidden">
+          <div class="chat-container">
+            <aside class="chat-sidebar">
+              <div class="chat-sidebar-header">Contatos</div>
+              <nav id="chat-contact-list" class="chat-contact-list">
+                <p class="p-4 text-sm opacity-70">Carregando...</p>
+              </nav>
+            </aside>
+            
+            <main class="chat-main">
+              <header id="chat-main-header" class="chat-main-header">
+                Selecione um contato para conversar
+              </header>
+              <div id="chat-box" class="chat-box">
+              </div>
+              <div id="chat-input-area" class="chat-input-area hidden">
+                <input id="chat-input" class="input flex-1" placeholder="Digite sua mensagem...">
+                <button id="chat-send" class="btn-primary px-5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 17V4.609a1 1 0 00-1.447-.894l-5 1.428zM10.894 2.553l7 14a1 1 0 001.169-1.409l-5-1.429A1 1 0 0013.825 17V4.609a1 1 0 00-1.447-.894l5 1.428z" /></svg>
+                </button>
+              </div>
+            </main>
           </div>
         </div>
 
@@ -327,7 +472,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue, push, update, remove, off, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
 
     /* ========================== Firebase init ========================== */
     const firebaseConfig = {
@@ -353,16 +498,24 @@
         persistentAlarmMinutes: 25,
         defaultReason: "Banheiro"
       },
-      // themeMode removido
       requests: [],
       s5Teams: [],
-      chatMessages: [], // (Novo)
-      audioInitialized: false, // Novo
-      audioCtx: null, // Novo
-      alarmOn: true, // Novo
-      alarmingStudents: new Set(), // Novo (para alarme persistente)
+      
+      users: {}, 
+      selectedChatUser: null,
+      currentMessages: [], 
+      messageListener: null,
+      lastMessageTimestamp: 0,
+      globalMessageListeners: [], 
+      unreadChats: new Set(),
+      
+      audioInitialized: false, 
+      audioCtx: null, 
+      alarmOn: true, 
+      alarmingStudents: new Set(),
+      alarmLevelsCache: {},
       timers: { clock:null, alert:null },
-      editingItemId: null, // Para rastrear item em edição
+      editingItemId: null,
     };
 
     /* ========================== Utils ========================== */
@@ -375,29 +528,25 @@
     };
     const cleanName = (n)=> (n||"").trim().toLowerCase().split(" ").filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" ");
     
-    // Helper para formatar data/hora para input type="datetime-local"
     const formatDateTimeLocal = (isoString) => {
       if (!isoString) return '';
       const date = new Date(isoString);
-      date.setMinutes(date.getMinutes() - date.getTimezoneOffset()); // Ajusta para fuso horário local
-      return date.toISOString().slice(0, 16); // Formato YYYY-MM-DDTHH:mm
+      date.setMinutes(date.getMinutes() - date.getTimezoneOffset());
+      return date.toISOString().slice(0, 16);
     };
 
-    // Helper para converter datetime-local para ISOString
     const parseDateTimeLocal = (dateTimeLocalString) => {
         if (!dateTimeLocalString) return '';
-        const date = new Date(dateTimeLocalString); // Isso interpretará como local se não for ISO completo
-        return date.toISOString(); // Converte para ISO string (UTC)
+        const date = new Date(dateTimeLocalString);
+        return date.toISOString();
     };
 
-    // === MELHORIA: Helper para formatar hora do chat ===
     const formatChatTime = (isoString) => {
         if (!isoString) return '';
         try {
             return new Date(isoString).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
         } catch (e) { return ''; }
     };
-    // ===================================================
 
     function toast(msg, kind="info"){
       const box = $("#toast");
@@ -407,7 +556,7 @@
       setTimeout(()=>box.classList.add("hidden"), 3000);
     }
 
-    /* ========================== Audio (Novo) ========================== */
+    /* ========================== Audio ========================== */
     function initAudio() {
       if (state.audioInitialized) return;
       try {
@@ -421,7 +570,7 @@
     }
 
     function playBeep() {
-      if (!state.audioCtx || !state.alarmOn) return; // Só toca se o contexto existir e o alarme estiver LIGADO
+      if (!state.audioCtx || !state.alarmOn) return;
       try {
         const oscillator = state.audioCtx.createOscillator();
         const gainNode = state.audioCtx.createGain();
@@ -429,18 +578,35 @@
         oscillator.connect(gainNode);
         gainNode.connect(state.audioCtx.destination);
         
-        oscillator.type = 'sine'; // 'sine', 'square', 'sawtooth', 'triangle'
-        oscillator.frequency.setValueAtTime(1000, state.audioCtx.currentTime); // 1000 Hz (beep)
-        gainNode.gain.setValueAtTime(0.5, state.audioCtx.currentTime); // Volume
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(1000, state.audioCtx.currentTime); 
+        gainNode.gain.setValueAtTime(0.5, state.audioCtx.currentTime);
         
         oscillator.start(state.audioCtx.currentTime);
-        oscillator.stop(state.audioCtx.currentTime + 0.2); // Duração de 0.2s
+        oscillator.stop(state.audioCtx.currentTime + 0.2);
       } catch (e) {
         console.error("Falha ao tocar bipe:", e);
       }
     }
+    
+    function playNotificationSound() {
+      if (!state.audioCtx) return;
+      try {
+        const oscillator = state.audioCtx.createOscillator();
+        const gainNode = state.audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(state.audioCtx.destination);
+        oscillator.type = 'triangle'; 
+        oscillator.frequency.setValueAtTime(1200, state.audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.3, state.audioCtx.currentTime); 
+        oscillator.start(state.audioCtx.currentTime);
+        oscillator.stop(state.audioCtx.currentTime + 0.1); 
+      } catch (e) {
+        console.error("Falha ao tocar som de notificação:", e);
+      }
+    }
 
-    /* ========================== Modal Genérico (Novo) ========================== */
+    /* ========================== Modal Genérico ========================== */
     const $modalOverlay = $("#modal-overlay");
     const $modalTitle = $("#modal-title");
     const $modalContent = $("#modal-content");
@@ -456,8 +622,8 @@
       $modalContent.innerHTML = contentHtml;
       onModalSave = saveCallback;
       onModalCancel = cancelCallback;
-      $modalSave.textContent = "Salvar"; // Resetar
-      $modalCancel.textContent = "Cancelar"; // Resetar
+      $modalSave.textContent = "Salvar";
+      $modalCancel.textContent = "Cancelar";
       $modalOverlay.classList.remove("hidden");
       $modalOverlay.classList.add("flex");
     }
@@ -475,7 +641,6 @@
     $modalCancel.addEventListener("click", closeModal);
     $modalClose.addEventListener("click", closeModal);
 
-    // Modal de Confirmação (substituindo window.confirm)
     function openConfirmModal(text, callback) {
       $modalTitle.textContent = "Confirmação";
       $modalContent.innerHTML = `<p>${text}</p>`;
@@ -496,7 +661,6 @@
       $modalOverlay.classList.add("flex");
     }
     
-    // Wrapper async para o confirmBox
     function confirmBox(text) {
       return new Promise((resolve) => {
         openConfirmModal(text, (ok) => {
@@ -505,15 +669,12 @@
       });
     }
 
-    /* ========================== Theme (Removido) ========================== */
-    // A lógica de tema foi removida para forçar o modo noturno.
-
-    /* ========================== Login ========================== */
+    /* ========================== Login / Logout ========================== */
     const USERS = { "ezequiel": "Gois", "larissa":"7524" };
 
     function showLogin(show){
       $("#login-overlay").classList.toggle("hidden", !show);
-      $("#login-overlay").classList.toggle("flex", show); // Ajustado para flex
+      $("#login-overlay").classList.toggle("flex", show);
       if (show) $("#login-user").focus();
     }
 
@@ -534,8 +695,16 @@
       if (USERS[user] && USERS[user] === pin){
         state.session = { user, ts: Date.now() };
         localStorage.setItem("sessionUser", JSON.stringify(state.session));
+        
+        const userRef = ref(db, `users/${user}`);
+        set(userRef, { lastSeen: new Date().toISOString() });
+        onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
+
         showLogin(false);
         toast("Bem-vindo!", "ok");
+        
+        listenForGlobalMessages();
+        
         return true;
       }
       $("#login-msg").classList.remove("hidden");
@@ -544,14 +713,28 @@
     }
 
     function logout(){
+      if (state.session && state.session.user) {
+        const userRef = ref(db, `users/${state.session.user}`);
+        onDisconnect(userRef).cancel(); 
+        set(userRef, { lastSeen: new Date(0).toISOString() }); 
+      }
+      stopListeningForGlobalMessages(); 
+
       localStorage.removeItem("sessionUser");
       state.session = null;
+      
+      $("#chat-contact-list").innerHTML = "";
+      $("#chat-box").innerHTML = "";
+      $("#chat-main-header").textContent = "Selecione um contato para conversar";
+      $("#chat-input-area").classList.add("hidden");
+      state.selectedChatUser = null;
+      if (state.messageListener) off(state.messageListener);
+      
       showLogin(true);
     }
 
     /* ========================== Data bindings ========================== */
     function bindRealtime(){
-      // v11
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
         if (s) state.settings = {...state.settings, ...s};
@@ -563,41 +746,36 @@
         $("#def-reason").value = state.settings.defaultReason || "";
       });
 
-      // v11
       onValue(ref(db, "saidas"), (snap)=>{
         const data = snap.val() || {};
         state.requests = Object.entries(data).map(([id, v])=> ({id, ...v}));
         renderSaidas();
       });
 
-      // v11
       onValue(ref(db, "s5Teams"), (snap)=>{
         const data = snap.val() || {};
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
         renderS5();
       });
 
-      // (Novo) Listener para Chat
-      onValue(ref(db, "chatMessages"), (snap)=>{
-        const data = snap.val() || {};
-        state.chatMessages = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        // Ordenar por timestamp
-        state.chatMessages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-        renderChat();
+      onValue(ref(db, "users"), (snap)=>{
+        state.users = snap.val() || {};
+        if(state.session) { 
+          renderUserList();
+          listenForGlobalMessages();
+        }
       });
     }
 
-    /* ========================== Render Saídas (Atualizado) ========================== */
+    /* ========================== Render Saídas ========================== */
     function renderSaidas(){
       const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
       
-      // === MELHORIA: Ordenar a fila por 'order' ou 'requestTime' ===
       pendingAll.sort((a, b) => {
           const orderA = a.order !== undefined ? a.order : new Date(a.requestTime).getTime();
           const orderB = b.order !== undefined ? b.order : new Date(b.requestTime).getTime();
           return orderA - orderB;
       });
-      // =============================================================
 
       const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
       $("#pending-count").textContent = pendingAll.length.toString();
@@ -614,16 +792,12 @@
         const li = document.createElement("li");
         li.className = isApproved ? "approved-item" : "pending-item";
         li.dataset.liId = req.id;
-        
-        // === MELHORIA: Tornar o item arrastável ===
         li.draggable = true;
         li.dataset.dragId = req.id;
-        // ==========================================
 
         const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
         const left = document.createElement("div");
         
-        // Adicionado motivo
         const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
         left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
                           <div class="text-xs mt-0.5">` +
@@ -640,7 +814,6 @@
         } else {
           right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>`;
         }
-        // Adicionados botões de editar/excluir
         right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
                             <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
 
@@ -670,9 +843,9 @@
         const hdr = document.createElement("div");
         hdr.className = "rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 px-3 py-2 font-extrabold flex items-center justify-between cursor-pointer";
         hdr.textContent = day;
-        hdr.dataset.day = day; // Adicionado para o listener de clique
+        hdr.dataset.day = day; 
         const caret = document.createElement("span"); caret.textContent = "▼"; caret.className = "transition-transform"; hdr.append(caret);
-        const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2";
+        const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2 hidden"; // Começa escondido
 
         byDay[day].sort((a,b)=>(new Date(b.requestTime||b.departureTime))-(new Date(a.requestTime||a.departureTime))).forEach(r=>{
           const li = document.createElement("li");
@@ -696,12 +869,11 @@
                           </div>`;
           list.appendChild(li);
         });
-        // Removido listener de clique daqui, movido para bindEvents
         histBox.append(hdr, list);
       });
     }
 
-    /* ========================== Render S5 (Atualizado) ========================== */
+    /* ========================== Render S5 ========================== */
     function renderS5(){
       const ul = $("#s5-list");
       ul.innerHTML = "";
@@ -722,9 +894,8 @@
         
         const chk = document.createElement("input");
         chk.type = "checkbox"; chk.checked = !!team.isCompleted;
-        chk.addEventListener("change", ()=> update(ref(db, "s5Teams/"+team.id), { isCompleted: chk.checked })); // v11
+        chk.addEventListener("change", ()=> update(ref(db, "s5Teams/"+team.id), { isCompleted: chk.checked }));
         
-        // Adicionados botões de editar/excluir
         const editBtn = document.createElement("button");
         editBtn.className = "btn-icon";
         editBtn.textContent = "✏️";
@@ -743,42 +914,144 @@
       });
     }
 
-    /* ========================== Render Chat (MELHORADO) ========================== */
-    function renderChat() {
+    /* ========================== Render Chat (1-para-1) ========================== */
+    function renderUserList() {
+      const $list = $("#chat-contact-list");
+      if (!$list) return;
+      $list.innerHTML = "";
+      const currentUser = state.session?.user;
+      if (!currentUser) return;
+      
+      const admins = ["Ezequiel", "Larissa"];
+      
+      admins.forEach(adminName => {
+        if (adminName === currentUser) return; 
+        
+        const lastSeenDate = new Date(state.users[adminName]?.lastSeen || 0);
+        const isOnline = (new Date() - lastSeenDate) < 5 * 60 * 1000; 
+        
+        const div = document.createElement("div");
+        div.className = "chat-contact";
+        div.dataset.userName = adminName;
+        
+        div.innerHTML = `
+          <div class="chat-contact-details">
+            <span class="presence-dot ${isOnline ? 'online-dot' : 'offline-dot'}"></span>
+            <span class="chat-contact-name">${adminName} (Admin)</span>
+          </div>
+        `;
+        
+        if (state.selectedChatUser === adminName) {
+          div.classList.add("active");
+        }
+        div.onclick = () => selectChat(adminName);
+        $list.appendChild(div);
+      });
+      
+      const divider = document.createElement("div");
+      divider.className = "px-4 pt-2 pb-1 text-xs font-bold opacity-60";
+      divider.textContent = "ALUNOS";
+      $list.appendChild(divider);
+
+      Object.keys(state.users)
+        .filter(userName => userName !== currentUser)
+        .filter(userName => !admins.includes(userName))
+        .sort()
+        .forEach(userName => {
+          const lastSeenDate = new Date(state.users[userName]?.lastSeen || 0);
+          const isOnline = (new Date() - lastSeenDate) < 5 * 60 * 1000;
+
+          const div = document.createElement("div");
+          div.className = "chat-contact";
+          div.dataset.userName = userName;
+          
+          div.innerHTML = `
+            <div class="chat-contact-details">
+              <span class="presence-dot ${isOnline ? 'online-dot' : 'offline-dot'}"></span>
+              <span class="chat-contact-name">${userName}</span>
+            </div>
+          `;
+          
+          if (state.selectedChatUser === userName) {
+            div.classList.add("active");
+          }
+          div.onclick = () => selectChat(userName);
+          $list.appendChild(div);
+        });
+    }
+
+    function selectChat(userName) {
+      if (!state.session || !state.session.user) return;
+      
+      state.selectedChatUser = userName;
+      state.lastMessageTimestamp = 0;
+      renderUserList(); 
+
+      state.unreadChats.delete(userName);
+      updateNotificationBadge();
+
+      $("#chat-main-header").textContent = `Conversando com ${userName}`;
+      $("#chat-input-area").classList.remove("hidden");
+      $("#chat-box").innerHTML = `<p class="text-sm opacity-70 italic p-4">Carregando mensagens...</p>`;
+
+      const currentUser = state.session.user;
+      const conversation_id = [currentUser, userName].sort().join('_');
+      
+      if (state.messageListener) {
+        off(state.messageListener); 
+      }
+
+      const messagesRef = ref(db, `messages/${conversation_id}`);
+      state.messageListener = messagesRef; 
+
+      onValue(messagesRef, (snap) => {
+        const data = snap.val() || {};
+        state.currentMessages = Object.entries(data).map(([id, v]) => ({ id, ...v }));
+        state.currentMessages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
+        renderSelectedChatMessages();
+      });
+    }
+    
+    function renderSelectedChatMessages() {
         const box = $("#chat-box");
+        if (!box) return;
+        if (!state.selectedChatUser) {
+          box.innerHTML = `<p class="text-sm opacity-70 italic p-4">Selecione um contato para conversar</p>`;
+          return;
+        }
+
+        const currentUser = state.session.user;
         box.innerHTML = "";
-        if (state.chatMessages.length === 0) {
-            box.innerHTML = `<p class="text-sm opacity-70 italic">Nenhuma mensagem ainda. Comece a conversa!</p>`;
+        
+        if (state.currentMessages.length === 0) {
+            state.lastMessageTimestamp = 0; 
+            box.innerHTML = `<p class="text-sm opacity-70 italic p-4">Nenhuma mensagem ainda.</p>`;
             return;
         }
 
-        const currentUser = state.session ? state.session.user : null; // Pega o utilizador logado (ex: "ezequiel")
-
-        state.chatMessages.forEach(msg => {
+        state.currentMessages.forEach(msg => {
+            const isSent = (msg.from === currentUser);
+            
             const msgEl = document.createElement("div");
-            const msgUser = msg.user || "Anônimo";
-            const isSent = (msgUser === currentUser);
             msgEl.className = `chat-msg ${isSent ? 'sent' : 'received'}`;
+            
+            if (!isSent) {
+              const userLabel = document.createElement("span");
+              userLabel.className = "chat-msg-user";
+              userLabel.textContent = cleanName(msg.from); 
+              msgEl.append(userLabel);
+            }
             
             const bubble = document.createElement("div");
             bubble.className = "chat-msg-bubble";
             bubble.textContent = msg.text || "";
             
-            const userLabel = document.createElement("span");
-            userLabel.className = "chat-msg-user";
-            
-            // Mostra "Você" ou o nome do usuário (capitalizado)
-            userLabel.textContent = isSent ? "Você" : cleanName(msgUser); 
-
-            // === MELHORIA: Adicionar Timestamp ===
             const timeEl = document.createElement("span");
             timeEl.className = "chat-msg-time";
-            timeEl.textContent = formatChatTime(msg.timestamp); // Usa a nova helper
-            // =====================================
+            timeEl.textContent = formatChatTime(msg.timestamp);
 
-            msgEl.append(userLabel, bubble, timeEl); // Adiciona o timeEl
-
-            // Adicionar botões de ação (Novo)
+            msgEl.append(bubble, timeEl);
+            
             if (isSent) {
                 const actionsDiv = document.createElement("div");
                 actionsDiv.className = "chat-msg-actions";
@@ -792,7 +1065,16 @@
             box.appendChild(msgEl);
         });
 
-        // Auto-scroll para o final
+        const lastMsg = state.currentMessages[state.currentMessages.length - 1];
+        if (lastMsg) {
+          const lastMsgTime = new Date(lastMsg.timestamp).getTime();
+          
+          if (lastMsg.from !== currentUser && lastMsgTime > state.lastMessageTimestamp) {
+            playNotificationSound();
+          }
+          state.lastMessageTimestamp = lastMsgTime;
+        }
+
         box.scrollTop = box.scrollHeight;
     }
 
@@ -801,33 +1083,26 @@
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
       
-      // === MELHORIA: Adicionar 'order' ao criar ===
-      // Usa Date.now() para que novos itens sempre vão para o final da lista
       const payload = {
         userName: name,
         status: "pending",
         requestTime: new Date().toISOString(),
         order: Date.now() 
       };
-      // =============================================
 
-      // v11
       push(ref(db, "saidas"), payload).then(()=>{
         $("#input-name").value = "";
         toast(`"${name}" adicionado à fila.`, "ok");
       });
     }
 
-    // === MELHORIA: Nova função para salvar a ordem da fila ===
     function updateQueueOrder() {
         const updates = {};
-        const items = $$("#pending-list li[data-drag-id]"); // Pega todos os <li> da fila
+        const items = $$("#pending-list li[data-drag-id]");
         
         items.forEach((li, index) => {
             const id = li.dataset.dragId;
             if (id) {
-                // Atribui o índice (0, 1, 2...) como a nova 'order'
-                // Isso é simples e robusto.
                 updates[`saidas/${id}/order`] = index;
             }
         });
@@ -837,14 +1112,12 @@
                 toast("Ordem da fila atualizada.", "ok");
             }).catch(err => {
                 toast("Erro ao salvar ordem.", "error");
-                renderSaidas(); // Re-renderiza para corrigir o DOM se a gravação falhar
+                renderSaidas();
             });
         }
     }
-    // =========================================================
 
     function approve(id){
-      // v11
       update(ref(db, "saidas/"+id), {
         status: "approved",
         departureTime: new Date().toISOString(),
@@ -852,28 +1125,38 @@
       });
     }
     function reject(id){
-      // v11
       update(ref(db, "saidas/"+id), {
         status: "rejected",
         returnTime: new Date().toISOString(),
         reason: "Recusado/Cancelado"
       });
     }
+    
+    // *** CORREÇÃO APLICADA AQUI ***
     function arrived(id){
-      // v11
+      // Envia a atualização para o Firebase
       update(ref(db, "saidas/"+id), {
         status: "completed",
         returnTime: new Date().toISOString()
       });
+      
+      // Limpa o estado local IMEDIATAMENTE para parar o alarme (corrige a race condition)
+      if (state.alarmingStudents.has(id)) {
+        console.log(`Limpando alarme (imediato) para ${id}`);
+        state.alarmingStudents.delete(id);
+      }
+      if (state.alarmLevelsCache[id]) {
+        delete state.alarmLevelsCache[id];
+      }
     }
+    
     async function removeReq(id){
       const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída?");
       if (!ok) return;
-      remove(ref(db, "saidas/"+id)); // v11
+      remove(ref(db, "saidas/"+id));
       toast("Registro excluído.", "ok");
     }
 
-    // (Atualizado)
     function openEditSaidaModal(id) {
       const req = state.requests.find(r => r.id === id);
       if (!req) return toast("Registro não encontrado.", "error");
@@ -910,7 +1193,6 @@
       openModal("Editar Saída", content, () => saveSaida(id));
     }
 
-    // (Atualizado)
     function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
       const reason = ($("#edit-saida-reason").value || "").trim();
@@ -928,26 +1210,21 @@
         returnTime: returnTime,
       };
 
-      // Limpar campos de tempo se estiverem vazios
       if (!requestTime) updates.requestTime = null;
       if (!departureTime) updates.departureTime = null;
       if (!returnTime) updates.returnTime = null;
       
-      // Ajustar status com base nos horários preenchidos
       const currentReq = state.requests.find(r => r.id === id);
-      if (updates.returnTime) { // Se tem retorno, está completo
+      if (updates.returnTime) {
           updates.status = "completed";
-      } else if (updates.departureTime) { // Se tem saída mas não retorno, está aprovado
+      } else if (updates.departureTime) {
           updates.status = "approved";
-      } else { // Se não tem saída nem retorno, está pendente
+      } else {
           updates.status = "pending";
       }
-      // Se era 'rejected' e agora tem saída/retorno, mude o status.
-      // Se continua sem saída/retorno E tinha sido rejeitado, mantenha rejeitado.
       if (currentReq.status === 'rejected' && !updates.departureTime && !updates.returnTime) {
           updates.status = "rejected";
       }
-
 
       update(ref(db, "saidas/" + id), updates).then(() => {
         toast("Registro atualizado!", "ok");
@@ -955,7 +1232,7 @@
       });
     }
 
-    /* ========================== Actions (S5) (Novas) ========================== */
+    /* ========================== Actions (S5) ========================== */
     function addS5Team() {
       const p = ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].map(sel => cleanName($(sel).value));
       const payload = {
@@ -967,7 +1244,7 @@
         isCompleted: false,
         registrationTime: new Date().toISOString()
       };
-      push(ref(db, "s5Teams"), payload).then(() => { // v11
+      push(ref(db, "s5Teams"), payload).then(() => {
         ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].forEach(sel => $(sel).value = "");
         toast("Equipe adicionada.", "ok");
       });
@@ -976,7 +1253,7 @@
     async function removeS5Team(id) {
       const ok = await confirmBox("Tem certeza que deseja excluir esta equipe 5S?");
       if (!ok) return;
-      remove(ref(db, "s5Teams/" + id)); // v11
+      remove(ref(db, "s5Teams/" + id));
       toast("Equipe excluída.", "ok");
     }
 
@@ -1030,7 +1307,8 @@
       });
     }
 
-    /* ========================== Actions (Chat - Novo) ========================== */
+    /* ========================== Actions (Chat) ========================== */
+    
     function sendChatMessage() {
         const input = $("#chat-input");
         const text = input.value.trim();
@@ -1040,37 +1318,49 @@
         if (!currentUser) {
             return toast("Você precisa estar logado para enviar mensagens.", "error");
         }
+        if (!state.selectedChatUser) {
+            return toast("Selecione um contato para enviar a mensagem.", "error");
+        }
+        
+        const targetUser = state.selectedChatUser;
+        const conversation_id = [currentUser, targetUser].sort().join('_');
 
         const payload = {
-            user: currentUser, // Salva o nome de usuário (ex: "ezequiel")
+            from: currentUser,
+            to: targetUser,
             text: text,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            read: false
         };
 
-        push(ref(db, "chatMessages"), payload).then(() => {
+        push(ref(db, `messages/${conversation_id}`), payload).then(() => {
             input.value = "";
-            // O onValue vai atualizar a UI, mas podemos forçar o scroll
-            $("#chat-box").scrollTop = $("#chat-box").scrollHeight;
+            input.focus();
         }).catch(err => {
             toast("Erro ao enviar mensagem.", "error");
         });
     }
 
     async function deleteChatMessage(id) {
-        const msg = state.chatMessages.find(m => m.id === id);
-        // Segurança extra: verificar se o utilizador é o dono
-        if (msg && msg.user === state.session.user) {
+        const msg = state.currentMessages.find(m => m.id === id);
+        const currentUser = state.session?.user;
+        const targetUser = state.selectedChatUser;
+        
+        if (!msg || !currentUser || !targetUser) return;
+        
+        if (msg.from === currentUser) {
           const ok = await confirmBox("Tem certeza que deseja excluir esta mensagem?");
           if (ok) {
-              remove(ref(db, "chatMessages/" + id));
+              const conversation_id = [currentUser, targetUser].sort().join('_');
+              remove(ref(db, `messages/${conversation_id}/${id}`));
               toast("Mensagem excluída.", "ok");
           }
         }
     }
 
     function openEditChatMessageModal(id) {
-        const msg = state.chatMessages.find(m => m.id === id);
-        if (!msg || msg.user !== state.session.user) return toast("Mensagem não encontrada.", "error");
+        const msg = state.currentMessages.find(m => m.id === id);
+        if (!msg || msg.from !== state.session.user) return toast("Mensagem não encontrada.", "error");
 
         const content = `
             <div class="field">
@@ -1083,8 +1373,12 @@
 
     function saveChatMessage(id) {
         const newText = $("#edit-chat-text").value.trim();
-        if (newText) {
-            update(ref(db, "chatMessages/" + id), { text: newText });
+        const currentUser = state.session?.user;
+        const targetUser = state.selectedChatUser;
+
+        if (newText && currentUser && targetUser) {
+            const conversation_id = [currentUser, targetUser].sort().join('_');
+            update(ref(db, `messages/${conversation_id}/${id}`), { text: newText });
             toast("Mensagem atualizada!", "ok");
             closeModal();
         } else {
@@ -1092,14 +1386,68 @@
         }
     }
     
-    async function clearAllChatMessages() {
-        const ok = await confirmBox("TEM CERTEZA? Isso irá apagar TODAS as mensagens do chat para TODOS os usuários.");
-        if (ok) {
-            remove(ref(db, "chatMessages"));
-            toast("Histórico do chat foi limpo.", "ok");
-        }
+    /* ========================== Notificações de Chat ========================== */
+    
+    function stopListeningForGlobalMessages() {
+      state.globalMessageListeners.forEach(({ listenerRef, listenerFn }) => {
+        off(listenerRef, 'value', listenerFn); 
+      });
+      state.globalMessageListeners = []; 
+      state.unreadChats = new Set(); 
+      updateNotificationBadge(); 
     }
+    
+    function listenForGlobalMessages() {
+      if (!state.session || !state.session.user) return;
+      
+      stopListeningForGlobalMessages(); 
+      const currentUser = state.session.user;
 
+      const admins = ["Ezequiel", "Larissa"];
+      const otherUsers = Object.keys(state.users);
+      const allPossiblePartners = [...new Set([...admins, ...otherUsers])];
+
+      allPossiblePartners.forEach(partner => {
+        if (partner === currentUser) return;
+
+        const conversation_id = [currentUser, partner].sort().join('_');
+        const listenerRef = ref(db, `messages/${conversation_id}`);
+        
+        const listenerFn = (snap) => {
+          const data = snap.val() || {};
+          const messages = Object.values(data);
+          if (messages.length === 0) {
+             state.unreadChats.delete(partner);
+             updateNotificationBadge();
+             return;
+          }
+          
+          const lastMessage = messages[messages.length - 1];
+
+          if (lastMessage && lastMessage.from === partner && state.selectedChatUser !== partner) {
+            state.unreadChats.add(partner);
+          } else if (state.selectedChatUser === partner) {
+            state.unreadChats.delete(partner);
+          }
+          
+          updateNotificationBadge();
+        };
+        
+        onValue(listenerRef, listenerFn); 
+        state.globalMessageListeners.push({ listenerRef, listenerFn });
+      });
+    }
+    
+    function updateNotificationBadge() {
+      const $badge = $("#chat-notification-badge");
+      if (state.unreadChats.size > 0) {
+        $badge.textContent = state.unreadChats.size;
+        $badge.classList.remove("hidden");
+      } else {
+        $badge.classList.add("hidden");
+      }
+    }
+    
     /* ========================== Settings ========================== */
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
@@ -1116,24 +1464,24 @@
         persistentAlarmMinutes: pers,
         defaultReason: $("#def-reason").value || "Banheiro"
       };
-      set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok")); // v11
+      set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
 
-    /* ========================== Backup / Reset (Atualizado) ========================== */
+    /* ========================== Backup / Reset ========================== */
     async function downloadBackup(){
-      // 'themeSnap' removido
-      const [saidasSnap, s5Snap, confSnap, chatSnap] = await Promise.all([ // chatSnap adicionado
-        get(ref(db, "saidas")), // v11
-        get(ref(db, "s5Teams")), // v11
-        get(ref(db, "settings")), // v11
-        get(ref(db, "chatMessages")) // (Novo)
+      const [saidasSnap, s5Snap, confSnap, messagesSnap, usersSnap] = await Promise.all([
+        get(ref(db, "saidas")),
+        get(ref(db, "s5Teams")),
+        get(ref(db, "settings")),
+        get(ref(db, "messages")),
+        get(ref(db, "users"))
       ]);
       const content = {
         saidas: saidasSnap.val() || {},
         s5Teams: s5Snap.val() || {},
         settings: confSnap.val() || {},
-        chatMessages: chatSnap.val() || {}, // (Novo)
-        // 'themeMode' removido
+        messages: messagesSnap.val() || {},
+        users: usersSnap.val() || {},
         exportedAt: new Date().toISOString()
       };
       const blob = new Blob([JSON.stringify(content, null, 2)], {type:"application/json"});
@@ -1143,6 +1491,7 @@
       a.click();
       URL.revokeObjectURL(a.href);
     }
+    
     async function uploadBackup(file){
       try{
         const text = await file.text();
@@ -1152,48 +1501,50 @@
         if (!ok) throw new Error("cancel");
         
         const tasks = [];
-        if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas)); // v11
-        if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams)); // v11
-        if (data.settings) tasks.push(set(ref(db, "settings"), data.settings)); // v11
-        if (data.chatMessages) tasks.push(set(ref(db, "chatMessages"), data.chatMessages)); // (Novo)
-        // 'themeMode' removido
+        if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas));
+        if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams));
+        if (data.settings) tasks.push(set(ref(db, "settings"), data.settings));
+        if (data.messages) tasks.push(set(ref(db, "messages"), data.messages)); 
+        if (data.users) tasks.push(set(ref(db, "users"), data.users));
+        
         await Promise.all(tasks);
         toast("Backup importado!", "ok");
       }catch(e){
         if (e.message!=="cancel") toast("Falha ao importar.", "error");
       }
     }
+    
     async function resetAll(){
-      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chat, configurações)?"); // Atualizado
+      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chats, utilizadores, configurações)?");
       if (!ok) return;
       await Promise.all([
-        remove(ref(db, "saidas")), // v11
-        remove(ref(db, "s5Teams")), // v11
-        remove(ref(db, "settings")), // v11
-        remove(ref(db, "chatMessages")) // (Novo)
+        remove(ref(db, "saidas")),
+        remove(ref(db, "s5Teams")),
+        remove(ref(db, "settings")),
+        remove(ref(db, "messages")),
+        remove(ref(db, "users"))
       ]);
       toast("Tudo resetado.", "ok");
     }
 
-    /* ========================== Clock & alerts (Atualizado) ========================== */
+    /* ========================== Clock & alerts (LÓGICA CORRIGIDA) ========================== */
     function startClock(){
       if (state.timers.clock) clearInterval(state.timers.clock);
-      
-      // Limpar o timer de alerta anterior se existir
       if (state.timers.alert) clearInterval(state.timers.alert);
       state.timers.alert = null; 
 
+      // Timer principal (a cada 1 segundo) - Atualiza UI e dispara bipes de TRANSIÇÃO
       state.timers.clock = setInterval(()=>{
         const now = Date.now();
         $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", {hour12:false});
         
-        // Variável para tocar o bipe (no máximo 1 vez por segundo)
-        let shouldBeep = false;
+        let shouldBeep = false; // Flag para tocar o bipe de transição
         const { alertLevels, persistentAlarmMinutes } = state.settings;
 
         state.requests.forEach(r=>{
-          // Tenta encontrar o <li> pela <ul> principal
-          const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`); // <-- CORREÇÃO APLICADA AQUI
+          const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`); 
+          const currentVisualLevel = state.alarmLevelsCache[r.id] || 0;
+          let newVisualLevel = 0; // Nível 0 = normal
 
           if (r.status==="pending"){
             const durEl = document.querySelector(`[data-dur="${r.id}-wait"]`);
@@ -1201,82 +1552,107 @@
           
           } else if (r.status==="approved"){
             const durEl = document.querySelector(`[data-dur="${r.id}-out"]`);
-            if (!r.departureTime) return; // Guarda de segurança
+            if (!r.departureTime) return;
             
             const departureTime = new Date(r.departureTime).getTime();
             const elapsedMs = now - departureTime;
             if (durEl) durEl.textContent = fmtDur(elapsedMs);
 
-            // Lógica do Alarme (Nova)
             const elapsedMinutes = elapsedMs / 60000;
             
-            // Níveis de alerta
             let alertClass = '';
-            if (elapsedMinutes >= alertLevels[0] && elapsedMinutes < alertLevels[1]) alertClass = 'alarm-level-1';
-            else if (elapsedMinutes >= alertLevels[1] && elapsedMinutes < alertLevels[2]) alertClass = 'alarm-level-2';
-            else if (elapsedMinutes >= alertLevels[2] && elapsedMinutes < alertLevels[3]) alertClass = 'alarm-level-3';
-            else if (elapsedMinutes >= alertLevels[3]) alertClass = 'alarm-level-4'; // Nível 4 ou persistente
+            if (elapsedMinutes >= alertLevels[0] && elapsedMinutes < alertLevels[1]) {
+                alertClass = 'alarm-level-1';
+                newVisualLevel = 1;
+            }
+            else if (elapsedMinutes >= alertLevels[1] && elapsedMinutes < alertLevels[2]) {
+                alertClass = 'alarm-level-2';
+                newVisualLevel = 2;
+            }
+            else if (elapsedMinutes >= alertLevels[2] && elapsedMinutes < alertLevels[3]) {
+                alertClass = 'alarm-level-3';
+                newVisualLevel = 3;
+            }
+            else if (elapsedMinutes >= alertLevels[3]) { 
+                alertClass = 'alarm-level-4';
+                newVisualLevel = 4;
+            }
 
-            // Aplicar classes de alerta no UI
             if (el) {
                 el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
                 if(alertClass) el.classList.add(alertClass);
             }
             
-            // Lógica do Alarme Persistente
+            if (newVisualLevel > currentVisualLevel) {
+                console.log(`Bipe de Transição para: ${r.userName} (Nível ${newVisualLevel})`);
+                shouldBeep = true; 
+                state.alarmLevelsCache[r.id] = newVisualLevel; 
+            }
+            
             if (elapsedMinutes >= persistentAlarmMinutes) {
               if (!state.alarmingStudents.has(r.id)) {
-                // Entrou no estado de alarme persistente
-                console.log(`Alarme persistente para: ${r.userName}`);
+                console.log(`Alarme PERSISTENTE para: ${r.userName}`);
                 state.alarmingStudents.add(r.id);
-                shouldBeep = true; // Toca o bipe na transição
+                shouldBeep = true; 
               }
             } else {
-              // Se estava no alarme persistente mas saiu (ex: editou horário ou voltou)
               if (state.alarmingStudents.has(r.id)) {
                   state.alarmingStudents.delete(r.id);
               }
             }
-          } else {
-             // Se o status não é mais "approved" (ex: "completed"), remove do alarme
+          } 
+          
+          // *** CORREÇÃO: Usando ELSE para limpar ***
+          // Só roda se o status for "completed" ou "rejected"
+          else { 
+             if (state.alarmLevelsCache[r.id]) {
+                delete state.alarmLevelsCache[r.id];
+             }
              if (state.alarmingStudents.has(r.id)) {
+                console.log(`Limpando alarme (Loop) para ${r.userName} (Status: ${r.status})`);
                 state.alarmingStudents.delete(r.id);
              }
-             // Remove classes de alarme se não estiver mais 'approved'
-             if (el) {
+             if (el) { // el será null se o item já foi para o histórico
                 el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
              }
           }
-        });
+        }); // Fim do loop forEach
 
-        // Tocar o bipe de transição (só na primeira vez)
         if (shouldBeep) {
             playBeep();
         }
 
-      }, 1000); // O relógio principal atualiza a cada segundo
+      }, 1000); // Fim do timer de 1 segundo
 
-      // Novo Timer: Alarme Persistente (toca a cada X segundos)
+      // Timer de Alarme PERSISTENTE (a cada 5 segundos)
       state.timers.alert = setInterval(() => {
         if (state.alarmingStudents.size > 0 && state.alarmOn) {
-            console.log("Bipe de alarme persistente...");
+            console.log("Bipe de alarme persistente (Repetição)...");
             playBeep();
         }
-      }, 5000); // Toca o bipe a cada 5 segundos se houver alguém na lista
+      }, 5000); 
     }
+    /* ========================== FIM DA LÓGICA DE ALARME ========================== */
 
 
-    /* ========================== Tabs & Events (Atualizado) ========================== */
+    /* ========================== Tabs & Events ========================== */
     function activateTab(id){
       $$(".tab-btn").forEach(b=>b.classList.remove("active"));
-      $$(".card").forEach(c=>c.classList.add("hidden"));
-      $(`[data-tab="${id}"]`).classList.add("active");
-      $(`#tab-${id}`).classList.remove("hidden");
+      $$("div[id^='tab-']").forEach(c=>c.classList.add("hidden")); 
+      
+      const $btn = $(`[data-tab="${id}"]`);
+      const $tab = $(`#tab-${id}`);
+      
+      if ($btn) $btn.classList.add("active");
+      if ($tab) $tab.classList.remove("hidden");
+      
+      if (id === 'chat' && state.selectedChatUser) {
+          state.unreadChats.delete(state.selectedChatUser);
+          updateNotificationBadge();
+      }
     }
 
     function bindEvents(){
-      // Inicializador de Áudio (Novo)
-      // Chama na primeira interação
       document.body.addEventListener('click', initAudio, { once: true });
       document.body.addEventListener('input', initAudio, { once: true });
 
@@ -1284,22 +1660,20 @@
       
       const pList = $("#pending-list");
 
-      // Listener unificado para "pending-list" (CLIQUES)
       pList.addEventListener("click", (e)=>{
         const btn = e.target.closest("button[data-act]");
         if (!btn) return;
         const act = btn.dataset.act, id = btn.dataset.id;
         if (act==="approve") approve(id);
         if (act==="reject") reject(id);
-        if (act==="return") arrived(id);
+        if (act==="return") arrived(id); // *** CHAMA A FUNÇÃO CORRIGIDA ***
         if (act==="del-saida") removeReq(id);
         if (act==="edit-saida") openEditSaidaModal(id);
       });
 
-      // === MELHORIA: Eventos de Arrastar e Soltar (Drag-n-Drop) ===
-      let dragSrcId = null; // Para rastrear o ID do item sendo arrastado
+      // Drag-n-Drop (Fila)
+      let dragSrcId = null;
 
-      // Função helper para limpar estilos de arrastar
       function cleanupDragStyles() {
            $$('#pending-list li').forEach(li => {
               li.classList.remove('drag-over-top', 'drag-over-bottom', 'dragging');
@@ -1309,14 +1683,12 @@
 
       pList.addEventListener("dragstart", (e) => {
           const li = e.target.closest('li[data-drag-id]');
-          // Impede que botões ou outros elementos iniciem o arrasto
           if (!li || e.target.tagName === 'BUTTON') return e.preventDefault();
           
           dragSrcId = li.dataset.dragId;
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData('text/plain', dragSrcId);
           
-          // Adiciona classe de "arrastando" com um pequeno atraso
           setTimeout(() => {
               if (dragSrcId) li.classList.add("dragging");
           }, 0);
@@ -1329,14 +1701,12 @@
           e.dataTransfer.dropEffect = 'move';
           const destLi = e.target.closest('li[data-drag-id]');
           
-          // Limpa indicadores anteriores
           $$('#pending-list li').forEach(li => {
               li.classList.remove('drag-over-top', 'drag-over-bottom');
           });
 
           if (!destLi || destLi.dataset.dragId === dragSrcId) return;
 
-          // Mostra onde o item vai cair
           const rect = destLi.getBoundingClientRect();
           const midY = rect.top + rect.height / 2;
           
@@ -1360,35 +1730,32 @@
 
           const destLi = e.target.closest('li[data-drag-id]');
           if (!destLi || destLi.dataset.dragId === dragSrcId) {
-              return cleanupDragStyles(); // Soltou em si mesmo ou em local inválido
+              return cleanupDragStyles();
           }
 
           const srcLi = pList.querySelector(`li[data-drag-id="${dragSrcId}"]`);
           if (!srcLi) return cleanupDragStyles();
 
-          // Move o item no DOM
           const rect = destLi.getBoundingClientRect();
           const midY = rect.top + rect.height / 2;
           if (e.clientY < midY) {
-              pList.insertBefore(srcLi, destLi); // Insere ANTES do alvo
+              pList.insertBefore(srcLi, destLi);
           } else {
-              pList.insertBefore(srcLi, destLi.nextSibling); // Insere DEPOIS do alvo
+              pList.insertBefore(srcLi, destLi.nextSibling);
           }
           
-          updateQueueOrder(); // Salva a nova ordem no Firebase
+          updateQueueOrder(); 
           cleanupDragStyles();
       });
 
       pList.addEventListener("dragend", (e) => {
-          cleanupDragStyles(); // Limpa tudo, não importa como o arrasto terminou
+          cleanupDragStyles();
       });
-      // =========================================================
 
-      // Listener unificado para "history" (colapso e botões)
       $("#history").addEventListener("click", (e)=>{
         const btn = e.target.closest("button[data-act]");
         if (btn){
-          e.stopPropagation(); // Impede que o clique no botão feche o acordeão
+          e.stopPropagation();
           const act = btn.dataset.act, id = btn.dataset.id;
           if (act==="del-saida") removeReq(id);
           if (act==="edit-saida") openEditSaidaModal(id);
@@ -1408,7 +1775,6 @@
       
       $("#s5-add").addEventListener("click", addS5Team);
 
-      // Listener unificado para "s5-list"
       $("#s5-list").addEventListener("click", (e)=>{
         const btn = e.target.closest("button[data-act]");
         if (!btn) return;
@@ -1417,15 +1783,15 @@
         if (act==="del-s5") removeS5Team(id);
       });
 
-      // (Novo) Eventos do Chat
+      // Eventos do Chat 1-para-1
       $("#chat-send").addEventListener("click", sendChatMessage);
       $("#chat-input").addEventListener("keypress", (e) => {
           if (e.key === "Enter" && !e.shiftKey) { 
-              e.preventDefault(); // Impede nova linha
+              e.preventDefault();
               sendChatMessage();
           }
       });
-      // (Novo) Listener para botões do chat (editar/excluir)
+      
       $("#chat-box").addEventListener("click", (e) => {
           const btn = e.target.closest("button[data-act]");
           if (!btn) return;
@@ -1434,13 +1800,9 @@
           if (act === "del-chat") deleteChatMessage(id);
           if (act === "edit-chat") openEditChatMessageModal(id);
       });
-      // (Novo) Listener para limpar chat
-      $("#chat-clear-btn").addEventListener("click", clearAllChatMessages);
-
 
       $("#btn-save-settings").addEventListener("click", saveSettings);
 
-      // Data management
       $("#ddm-header").addEventListener("click", ()=> {
         $("#ddm").classList.toggle("hidden");
         $("#ddm-caret").classList.toggle("rotate-180");
@@ -1449,10 +1811,8 @@
       $("#file-backup").addEventListener("change", (e)=> e.target.files[0] && uploadBackup(e.target.files[0]));
       $("#btn-reset").addEventListener("click", resetAll);
 
-      // Tabs
       $$(".tab-btn").forEach(b=> b.addEventListener("click", ()=> activateTab(b.dataset.tab)));
 
-      // (Novo) Controle do Alarme
       $("#alarm-pill").addEventListener("click", () => {
         state.alarmOn = !state.alarmOn;
         const pill = $("#alarm-pill");
@@ -1469,9 +1829,8 @@
         }
       });
 
-      // Login
       $("#login-btn").addEventListener("click", ()=> {
-        initAudio(); // Garante que o áudio funcione após o login
+        initAudio();
         login($("#login-user").value, $("#login-pin").value)
       });
       $("#logout-btn").addEventListener("click", logout);
@@ -1479,8 +1838,15 @@
 
     /* ========================== Boot ========================== */
     function boot(){
-      // initTheme() removido
-      if (!tryAutoLogin()) showLogin(true);
+      if (tryAutoLogin()) {
+        const userRef = ref(db, `users/${state.session.user}`);
+        set(userRef, { lastSeen: new Date().toISOString() });
+        onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
+        listenForGlobalMessages();
+      } else {
+        showLogin(true);
+      }
+      
       bindEvents();
       bindRealtime();
       startClock();
