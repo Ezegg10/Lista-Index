@@ -69,8 +69,6 @@
     .card{border:1px solid var(--border);background:var(--bg-card);border-radius:16px;padding:1rem 1rem 1.25rem 1rem;box-shadow:0 10px 25px -12px rgba(0,0,0,.25)}
     .dark .card{background:#0b1220}
     
-    /* REMOVIDO: Estilos de Chat */
-    
     .section-title{font-weight:800}
     .badge{background:#fde68a;color:#78350f;border-radius:9999px;padding:.1rem .55rem;font-size:.75rem;font-weight:800}
     .field>label{display:block;font-size:.85rem;opacity:.8;margin-bottom:.25rem}
@@ -91,8 +89,6 @@
     .dark .approved-item{background:#052e1a}
     .hidden{display:none}
     #modal-overlay.flex { display: flex; }
-    
-    /* REMOVIDO: Estilo de chat-popup-overlay */
 
     /* Estilos de Alarme */
     @keyframes pulse-red {
@@ -113,9 +109,6 @@
       animation: pulse-red 1.5s infinite; 
       border-color: #ef4444;
     }
-
-    /* REMOVIDO: Todos os estilos de .chat-* e .presence-* */
-    
   </style>
 
 </head>
@@ -276,13 +269,7 @@
 
     <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
 
-    <!-- ====================================================== -->
-    <!-- === BOTÃO FLUTUANTE (AGORA LINK) === -->
-    <!-- ====================================================== -->
-    
-    <!-- REMOVIDO: Popup do Chat -->
-
-    <!-- Botão Flutuante (FAB) do Chat -->
+    <!-- Botão Flutuante (FAB) do Link -->
     <a id="fab-form-link" 
        href="https://forms.gle/HJLqG9VJWkmg3c9R6" 
        target="_blank" 
@@ -294,10 +281,6 @@
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
       </svg>
     </a>
-    <!-- ====================================================== -->
-    <!-- === FIM: Botão Flutuante === -->
-    <!-- ====================================================== -->
-
   </div>
 
   <script>
@@ -328,7 +311,7 @@
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
     
-    /* ========================== State (Chat Removido) ========================== */
+    /* ========================== State ========================== */
     const state = {
       session: null,
       settings: {
@@ -336,10 +319,8 @@
         persistentAlarmMinutes: 25,
         defaultReason: "Banheiro"
       },
-      requests: [],
+      requests: [], // AGORA SERÁ A LISTA COMBINADA
       s5Teams: [],
-      
-      // REMOVIDO: Estado do Chat
       
       audioInitialized: false, 
       audioCtx: null, 
@@ -349,6 +330,10 @@
       timers: { clock:null, alert:null },
       editingItemId: null,
     };
+    
+    // NOVO: Estados separados para a fila e histórico
+    let filaAtivaState = [];
+    let historicoState = [];
 
     /* ========================== Utils ========================== */
     const $ = (sel) => document.querySelector(sel);
@@ -373,8 +358,6 @@
         return date.toISOString();
     };
 
-    // REMOVIDO: formatChatTime
-
     function toast(msg, kind="info"){
       const box = $("#toast");
       box.textContent = msg;
@@ -383,7 +366,7 @@
       setTimeout(()=>box.classList.add("hidden"), 3000);
     }
 
-    /* ========================== Audio (Notificação Removida) ========================== */
+    /* ========================== Audio ========================== */
     function initAudio() {
       if (state.audioInitialized) return;
       try {
@@ -416,8 +399,6 @@
       }
     }
     
-    // REMOVIDO: playNotificationSound()
-
     /* ========================== Modal Genérico ========================== */
     const $modalOverlay = $("#modal-overlay");
     const $modalTitle = $("#modal-title");
@@ -481,7 +462,7 @@
       });
     }
 
-    /* ========================== Login / Logout (Chat Removido) ========================== */
+    /* ========================== Login / Logout ========================== */
     const USERS = { "ezequiel": "Gois", "larissa":"7524" };
 
     function showLogin(show){
@@ -508,8 +489,6 @@
         state.session = { user, ts: Date.now() };
         localStorage.setItem("sessionUser", JSON.stringify(state.session));
         
-        // REMOVIDO: Firebase 'set' para users
-        
         showLogin(false);
         toast("Bem-vindo!", "ok");
         return true;
@@ -520,17 +499,12 @@
     }
 
     function logout(){
-      // REMOVIDO: Firebase 'set' para users (onDisconnect)
-      
       localStorage.removeItem("sessionUser");
       state.session = null;
-      
-      // REMOVIDO: Limpeza de UI do Chat
-      
       showLogin(true);
     }
 
-    /* ========================== Data bindings (Chat Removido) ========================== */
+    /* ========================== Data bindings ========================== */
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
@@ -543,9 +517,23 @@
         $("#def-reason").value = state.settings.defaultReason || "";
       });
 
+      // Este agora só ouve a FILA ATIVA (MUITO LEVE)
       onValue(ref(db, "saidas"), (snap)=>{
         const data = snap.val() || {};
-        state.requests = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        filaAtivaState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        
+        // Combina com o histórico que já temos no state
+        state.requests = [...filaAtivaState, ...historicoState];
+        renderSaidas();
+      });
+
+      // NOVO: Ouvinte APENAS para o histórico
+      onValue(ref(db, "historicoSaidas"), (snap)=>{
+        const data = snap.val() || {};
+        historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        
+        // Combina com a fila ativa que já temos no state
+        state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
 
@@ -554,8 +542,6 @@
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
         renderS5();
       });
-
-      // REMOVIDO: Listener 'users'
     }
 
     /* ========================== Render Saídas ========================== */
@@ -564,7 +550,7 @@
       
       pendingAll.sort((a, b) => {
           const orderA = a.order !== undefined ? a.order : new Date(a.requestTime).getTime();
-          const orderB = b.order !== undefined ? b.order : new Date(b.requestTime).getTime();
+          const orderB = b.order !== undefined ? b.order : new Date(a.requestTime).getTime();
           return orderA - orderB;
       });
 
@@ -705,11 +691,6 @@
       });
     }
 
-    /* ========================== Render Chat (REMOVIDO) ========================== */
-    // REMOVIDO: renderUserList
-    // REMOVIDO: selectChat
-    // REMOVIDO: renderSelectedChatMessages
-
     /* ========================== Actions (Saídas) ========================== */
     function addStudent(){
       const name = cleanName($("#input-name").value);
@@ -750,26 +731,69 @@
     }
 
     function approve(id){
+      // Esta função permanece igual, pois apenas atualiza um item *dentro* da fila ativa
       update(ref(db, "saidas/"+id), {
         status: "approved",
         departureTime: new Date().toISOString(),
         reason: state.settings.defaultReason || "Banheiro"
       });
     }
-    function reject(id){
-      update(ref(db, "saidas/"+id), {
+    
+    // === VERSÃO NOVA (Move para o histórico) ===
+    async function reject(id) {
+      // 1. Encontra o registro na fila ativa
+      const req = filaAtivaState.find(r => r.id === id); 
+      if (!req) return toast("Registro não encontrado", "error");
+
+      // 2. Prepara o registro final para o histórico
+      const historicoEntry = {
+        ...req,
         status: "rejected",
         returnTime: new Date().toISOString(),
         reason: "Recusado/Cancelado"
-      });
+      };
+
+      // 3. Cria o objeto de múltiplas escritas
+      const updates = {};
+      updates[`historicoSaidas/${id}`] = historicoEntry; // Adiciona ao histórico
+      updates[`saidas/${id}`] = null; // Remove da fila ativa
+
+      // 4. Executa
+      try {
+        await update(ref(db), updates);
+        toast("Pedido movido para o histórico.", "ok");
+      } catch (e) {
+        toast("Erro ao mover pedido.", "error");
+      }
     }
     
-    function arrived(id){
-      update(ref(db, "saidas/"+id), {
+    // === VERSÃO NOVA (Move para o histórico) ===
+    async function arrived(id) {
+      // 1. Encontra o registro na fila ativa
+      const req = filaAtivaState.find(r => r.id === id); 
+      if (!req) return toast("Registro não encontrado", "error");
+
+      // 2. Prepara o registro final para o histórico
+      const historicoEntry = {
+        ...req, // Pega todos os dados existentes (nome, hora, etc.)
         status: "completed",
         returnTime: new Date().toISOString()
-      });
+      };
+
+      // 3. Cria um objeto de "múltiplas escritas"
+      const updates = {};
+      updates[`historicoSaidas/${id}`] = historicoEntry; // Adiciona ao histórico
+      updates[`saidas/${id}`] = null; // Remove da fila ativa
+
+      // 4. Executa as duas operações de uma vez
+      try {
+        await update(ref(db), updates);
+        toast("Aluno movido para o histórico.", "ok");
+      } catch (e) {
+        toast("Erro ao mover aluno.", "error");
+      }
       
+      // Limpeza imediata do alarme (lógica anterior mantida)
       if (state.alarmingStudents.has(id)) {
         console.log(`Limpando alarme (imediato) para ${id}`);
         state.alarmingStudents.delete(id);
@@ -779,11 +803,24 @@
       }
     }
     
+    // === CORREÇÃO: removeReq agora precisa saber de ONDE apagar ===
     async function removeReq(id){
-      const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída?");
+      const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída PERMANENTEMENTE?");
       if (!ok) return;
-      remove(ref(db, "saidas/"+id));
-      toast("Registro excluído.", "ok");
+      
+      // 1. Descobrir se o item está na fila ativa ou no histórico
+      const req = state.requests.find(r => r.id === id);
+      let path = `saidas/${id}`; // Padrão é a fila ativa
+      if (req && (req.status === 'completed' || req.status === 'rejected')) {
+        path = `historicoSaidas/${id}`; // Se completo/rejeitado, está no histórico
+      }
+
+      // 2. Apagar do nó correto
+      remove(ref(db, path)).then(() => {
+        toast("Registro excluído.", "ok");
+      }).catch(err => {
+        toast("Erro ao excluir.", "error");
+      });
     }
 
     function openEditSaidaModal(id) {
@@ -822,7 +859,8 @@
       openModal("Editar Saída", content, () => saveSaida(id));
     }
 
-    function saveSaida(id) {
+    // === CORREÇÃO: saveSaida agora precisa saber para ONDE salvar/mover ===
+    async function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
       const reason = ($("#edit-saida-reason").value || "").trim();
       const requestTime = parseDateTimeLocal($("#edit-request-time").value);
@@ -831,7 +869,8 @@
 
       if (!name) return toast("O nome não pode ficar em branco.", "error");
 
-      const updates = {
+      // 1. Montar o objeto de dados atualizado
+      const updatesPayload = {
         userName: name,
         reason: reason || (state.settings.defaultReason || "Banheiro"),
         requestTime: requestTime,
@@ -839,26 +878,57 @@
         returnTime: returnTime,
       };
 
-      if (!requestTime) updates.requestTime = null;
-      if (!departureTime) updates.departureTime = null;
-      if (!returnTime) updates.returnTime = null;
+      if (!requestTime) updatesPayload.requestTime = null;
+      if (!departureTime) updatesPayload.departureTime = null;
+      if (!returnTime) updatesPayload.returnTime = null;
       
       const currentReq = state.requests.find(r => r.id === id);
-      if (updates.returnTime) {
-          updates.status = "completed";
-      } else if (updates.departureTime) {
-          updates.status = "approved";
+      if (!currentReq) return toast("Erro: Registro original não encontrado.", "error");
+
+      if (updatesPayload.returnTime) {
+          updatesPayload.status = "completed";
+      } else if (updatesPayload.departureTime) {
+          updatesPayload.status = "approved";
       } else {
-          updates.status = "pending";
+          updatesPayload.status = "pending";
       }
-      if (currentReq.status === 'rejected' && !updates.departureTime && !updates.returnTime) {
-          updates.status = "rejected";
+      if (currentReq.status === 'rejected' && !updatesPayload.departureTime && !updatesPayload.returnTime) {
+          updatesPayload.status = "rejected";
+      }
+      
+      // 2. Descobrir onde o registo *estava* e para onde *vai*
+      const wasInHistory = currentReq && (currentReq.status === 'completed' || currentReq.status === 'rejected');
+      const newStatus = updatesPayload.status;
+      const willBeInHistory = (newStatus === 'completed' || newStatus === 'rejected');
+
+      // 3. Preparar a atualização atómica
+      const updates = {};
+      
+      if (wasInHistory && !willBeInHistory) {
+          // Mover: Histórico -> Fila Ativa
+          updates[`historicoSaidas/${id}`] = null;
+          updates[`saidas/${id}`] = {...currentReq, ...updatesPayload}; // Mescla dados para não perder 'order' etc.
+      } else if (!wasInHistory && willBeInHistory) {
+          // Mover: Fila Ativa -> Histórico
+          updates[`saidas/${id}`] = null;
+          updates[`historicoSaidas/${id}`] = {...currentReq, ...updatesPayload};
+      } else if (wasInHistory) {
+          // Atualizar no lugar: Histórico -> Histórico
+          updates[`historicoSaidas/${id}`] = {...currentReq, ...updatesPayload};
+      } else {
+          // Atualizar no lugar: Fila Ativa -> Fila Ativa
+          updates[`saidas/${id}`] = {...currentReq, ...updatesPayload};
       }
 
-      update(ref(db, "saidas/" + id), updates).then(() => {
+      // 4. Executar
+      try {
+        await update(ref(db), updates);
         toast("Registro atualizado!", "ok");
         closeModal();
-      });
+      } catch (e) {
+        toast("Erro ao atualizar.", "error");
+        console.error("Falha ao salvar:", e, updates);
+      }
     }
 
     /* ========================== Actions (S5) ========================== */
@@ -935,14 +1005,6 @@
         closeModal();
       });
     }
-
-    /* ========================== Actions (Chat - REMOVIDO) ========================== */
-    // REMOVIDO: sendChatMessage
-    // REMOVIDO: deleteChatMessage
-    // REMOVIDO: openEditChatMessageModal
-    // REMOVIDO: saveChatMessage
-    
-    /* ========================== Notificações de Chat (REMOVIDO) ========================== */
     
     /* ========================== Settings ========================== */
     function saveSettings(){
@@ -963,19 +1025,19 @@
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
 
-    /* ========================== Backup / Reset (Chat Removido) ========================== */
+    /* ========================== Backup / Reset ========================== */
     async function downloadBackup(){
-      const [saidasSnap, s5Snap, confSnap] = await Promise.all([
+      const [saidasSnap, s5Snap, confSnap, historicoSnap] = await Promise.all([
         get(ref(db, "saidas")),
         get(ref(db, "s5Teams")),
         get(ref(db, "settings")),
-        // REMOVIDO: messagesSnap, usersSnap
+        get(ref(db, "historicoSaidas")), // NOVO
       ]);
       const content = {
         saidas: saidasSnap.val() || {},
+        historicoSaidas: historicoSnap.val() || {}, // NOVO
         s5Teams: s5Snap.val() || {},
         settings: confSnap.val() || {},
-        // REMOVIDO: messages, users
         exportedAt: new Date().toISOString()
       };
       const blob = new Blob([JSON.stringify(content, null, 2)], {type:"application/json"});
@@ -996,9 +1058,9 @@
         
         const tasks = [];
         if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas));
+        if (data.historicoSaidas) tasks.push(set(ref(db, "historicoSaidas"), data.historicoSaidas)); // NOVO
         if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams));
         if (data.settings) tasks.push(set(ref(db, "settings"), data.settings));
-        // REMOVIDO: data.messages, data.users
         
         await Promise.all(tasks);
         toast("Backup importado!", "ok");
@@ -1008,13 +1070,13 @@
     }
     
     async function resetAll(){
-      const ok = await confirmBox("Resetar TUDO (saídas, 5S, configurações)? O chat já foi removido.");
+      const ok = await confirmBox("Resetar TUDO (saídas, histórico, 5S, configurações)?");
       if (!ok) return;
       await Promise.all([
         remove(ref(db, "saidas")),
+        remove(ref(db, "historicoSaidas")), // NOVO
         remove(ref(db, "s5Teams")),
         remove(ref(db, "settings")),
-        // REMOVIDO: remove messages, users
       ]);
       toast("Tudo resetado.", "ok");
     }
@@ -1121,7 +1183,7 @@
       }, 5000); 
     }
 
-    /* ========================== Tabs & Events (Chat Removido) ========================== */
+    /* ========================== Tabs & Events ========================== */
     function activateTab(id){
       $$(".tab-btn").forEach(b=>b.classList.remove("active"));
       $$("div[id^='tab-']").forEach(c=>c.classList.add("hidden")); 
@@ -1246,8 +1308,6 @@
         if (act==="edit-s5") openEditS5Modal(id);
         if (act==="del-s5") removeS5Team(id);
       });
-
-      // REMOVIDO: Eventos de Chat
       
       $("#btn-save-settings").addEventListener("click", saveSettings);
 
@@ -1284,10 +1344,10 @@
       $("#logout-btn").addEventListener("click", logout);
     }
 
-    /* ========================== Boot (Chat Removido) ========================== */
+    /* ========================== Boot ========================== */
     function boot(){
       if (tryAutoLogin()) {
-        // REMOVIDO: 'set' e 'onDisconnect' do user
+        // Login bem sucedido
       } else {
         showLogin(true);
       }
