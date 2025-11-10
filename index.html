@@ -18,7 +18,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
-      darkMode: 'class', // Ainda necessário para o Tailwind funcionar
+      darkMode: 'class', 
       theme: {
         extend: {
           fontFamily: { inter: ['Inter', 'system-ui', 'ui-sans-serif']},
@@ -109,20 +109,24 @@
       animation: pulse-red 1.5s infinite; 
       border-color: #ef4444;
     }
+
+    /* Estilos de Chat REMOVIDOS */
   </style>
 
 </head>
 <body class="font-inter bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300">
 
+  <!-- ===== MODIFICADO: Login overlay para Usuário (em vez de Email) ===== -->
   <div id="login-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
     <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
       <div class="flex items-center gap-3 mb-4">
-        <h2 class="text-xl font-extrabold">Acesso</h2>
+        <h2 class="text-xl font-extrabold">Acesso de Administrador</h2>
       </div>
-      <p class="text-sm opacity-80 mb-4">Entre com usuário e PIN.</p>
+      <p class="text-sm opacity-80 mb-4">Entre com seu usuário e senha.</p>
       <div class="grid gap-3">
-        <input id="login-user" class="input" placeholder="Usuário">
-        <input id="login-pin" class="input" placeholder="PIN" type="password" inputmode="numeric">
+        <!-- Mantido o placeholder "Usuário" -->
+        <input id="login-user" class="input" placeholder="Usuário" type="text">
+        <input id="login-pin" class="input" placeholder="Senha" type="password">
         <button id="login-btn" class="btn-primary">Entrar</button>
       </div>
       <p id="login-msg" class="mt-3 text-sm text-red-500 hidden"></p>
@@ -136,7 +140,7 @@
         <button id="modal-close" class="btn-icon">✖</button>
       </div>
       <div id="modal-content" class="grid gap-3">
-        </div>
+      </div>
       <div class="mt-4 flex gap-2">
         <button id="modal-save" class="btn-primary flex-1">Salvar</button>
         <button id="modal-cancel" class="btn-secondary flex-1">Cancelar</button>
@@ -166,7 +170,9 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
             Controle de Saídas
           </button>
-                    
+          
+          <!-- REMOVIDO: Botão de Chat -->
+
           <button class="tab-btn" data-tab="s5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h.01a1 1 0 100-2H10zm3 0a1 1 0 000 2h.01a1 1 0 100-2H13z" clip-rule="evenodd" /></svg>
             Gestão 5S
@@ -227,6 +233,9 @@
           </div>
         </div>
 
+        <!-- REMOVIDO: Card do Chat -->
+        <div id="tab-chat" class="card hidden"></div>
+
         <div id="tab-s5" class="card hidden">
           <h2 class="text-xl font-bold mb-4 text-center">Gestão de Qualidade 5S</h2>
           <div class="grid sm:grid-cols-2 gap-3">
@@ -276,7 +285,6 @@
        rel="noopener noreferrer"
        class="fixed bottom-6 right-6 z-40 btn-primary rounded-full p-4 shadow-lg"
        title="Abrir Formulário de Feedback">
-      <!-- Ícone de "Formulário" (Clipboard List) -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
       </svg>
@@ -284,16 +292,19 @@
   </div>
 
   <script>
-    // Reveal after JS initialization starts
     window.addEventListener('load', () => {
       document.documentElement.style.opacity = "1";
       document.getElementById('app').classList.remove('opacity-0');
     });
   </script>
 
+  <!-- ===== MODIFICADO: Importar Firebase Auth ===== -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-    import { getDatabase, ref, set, get, onValue, push, update, remove, off, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    import { getDatabase, ref, set, get, onValue, push, update, remove } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+    // ADICIONADO:
+    import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
 
     /* ========================== Firebase init ========================== */
     const firebaseConfig = {
@@ -307,21 +318,22 @@
       measurementId: "G-0ZFEQRYPQT"
     };
 
-    let app, db;
+    let app, db, auth; // ADICIONADO: auth
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
+    auth = getAuth(app); // ADICIONADO: auth
     
     /* ========================== State ========================== */
     const state = {
-      session: null,
+      isLoggedIn: false, // MODIFICADO: de 'session' para 'isLoggedIn'
       settings: {
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
         defaultReason: "Banheiro"
       },
-      requests: [], // AGORA SERÁ A LISTA COMBINADA
+      requests: [], 
       s5Teams: [],
-      
+      // REMOVIDO: chatMessages
       audioInitialized: false, 
       audioCtx: null, 
       alarmOn: true, 
@@ -330,7 +342,7 @@
       timers: { clock:null, alert:null },
       editingItemId: null,
     };
-    
+
     // NOVO: Estados separados para a fila e histórico
     let filaAtivaState = [];
     let historicoState = [];
@@ -357,6 +369,8 @@
         const date = new Date(dateTimeLocalString);
         return date.toISOString();
     };
+    
+    // REMOVIDO: formatChatTime
 
     function toast(msg, kind="info"){
       const box = $("#toast");
@@ -462,8 +476,9 @@
       });
     }
 
-    /* ========================== Login / Logout ========================== */
-    const USERS = { "ezequiel": "Gois", "larissa":"7524" };
+    /* ========================== Login / Logout (COM FIREBASE AUTH) ========================== */
+    // REMOVIDO: const USERS = { ... };
+    // REMOVIDO: tryAutoLogin()
 
     function showLogin(show){
       $("#login-overlay").classList.toggle("hidden", !show);
@@ -471,40 +486,64 @@
       if (show) $("#login-user").focus();
     }
 
-    function tryAutoLogin(){
-      try {
-        const raw = localStorage.getItem("sessionUser");
-        if (!raw) return false;
-        const sess = JSON.parse(raw);
-        if (!sess || !USERS[sess.user]) return false;
-        state.session = sess;
-        return true;
-      } catch(e){ return false; }
-    }
-
-    function login(user, pin){
+    // MODIFICADO: login() agora usa Firebase Auth
+    async function login(user, pin){
       user = (user||"").trim().toLowerCase();
       pin = (pin||"").trim();
-      if (USERS[user] && USERS[user] === pin){
-        state.session = { user, ts: Date.now() };
-        localStorage.setItem("sessionUser", JSON.stringify(state.session));
+      
+      if (!user || !pin) {
+        $("#login-msg").classList.remove("hidden");
+        $("#login-msg").textContent = "Usuário e senha são obrigatórios.";
+        return false;
+      }
+      
+      // === O "TRUQUE" ===
+      // Converte o nome de usuário (ex: "ezequiel") em um email (ex: "ezequiel@admin.com")
+      // IMPORTANTE: Mude "@admin.com" se você usou outro domínio
+      const email = user + "@admin.com"; 
+
+      try {
+        // Tenta fazer o login no Firebase
+        await signInWithEmailAndPassword(auth, email, pin);
+        
+        // Se der certo:
+        state.isLoggedIn = true; // Apenas define que está logado
         
         showLogin(false);
-        toast("Bem-vindo!", "ok");
+        toast("Login bem-sucedido!", "ok");
         return true;
+        
+      } catch (error) {
+        // Se der errado:
+        console.error("Erro de login:", error.code);
+        let msg = "Usuário ou senha inválidos.";
+        if (error.code === 'auth/invalid-email') {
+            msg = "Usuário inválido (erro no código).";
+        } else if (error.code === 'auth/network-request-failed') {
+            msg = "Erro de rede. Verifique sua conexão.";
+        } else if (error.code === 'auth/invalid-credential') {
+             msg = "Usuário ou senha inválidos.";
+        }
+        $("#login-msg").classList.remove("hidden");
+        $("#login-msg").textContent = msg;
+        return false;
       }
-      $("#login-msg").classList.remove("hidden");
-      $("#login-msg").textContent = "Usuário ou PIN inválidos.";
-      return false;
     }
 
-    function logout(){
-      localStorage.removeItem("sessionUser");
-      state.session = null;
-      showLogin(true);
+    // MODIFICADO: logout() agora usa Firebase Auth
+    async function logout(){
+      try {
+        await signOut(auth); // Faz o logout do Firebase
+        state.isLoggedIn = false;
+        // O onAuthStateChanged no boot() vai pegar esse evento e mostrar o login.
+        toast("Você saiu.", "ok");
+      } catch (error) {
+        console.error("Erro ao sair:", error);
+        toast("Erro ao tentar sair.", "error");
+      }
     }
 
-    /* ========================== Data bindings ========================== */
+    /* ========================== Data bindings (Com Performance) ========================== */
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
@@ -517,22 +556,18 @@
         $("#def-reason").value = state.settings.defaultReason || "";
       });
 
-      // Este agora só ouve a FILA ATIVA (MUITO LEVE)
+      // MODIFICADO: Ouve a FILA ATIVA
       onValue(ref(db, "saidas"), (snap)=>{
         const data = snap.val() || {};
         filaAtivaState = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        
-        // Combina com o histórico que já temos no state
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
 
-      // NOVO: Ouvinte APENAS para o histórico
+      // ADICIONADO: Ouve o HISTÓRICO
       onValue(ref(db, "historicoSaidas"), (snap)=>{
         const data = snap.val() || {};
         historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
-        
-        // Combina com a fila ativa que já temos no state
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
@@ -542,10 +577,13 @@
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
         renderS5();
       });
+
+      // REMOVIDO: Listener do Chat
     }
 
     /* ========================== Render Saídas ========================== */
     function renderSaidas(){
+      // Agora o 'state.requests' já é a lista combinada
       const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
       
       pendingAll.sort((a, b) => {
@@ -569,7 +607,7 @@
         const li = document.createElement("li");
         li.className = isApproved ? "approved-item" : "pending-item";
         li.dataset.liId = req.id;
-        li.draggable = true;
+        li.draggable = true; // Drag-n-drop mantido
         li.dataset.dragId = req.id;
 
         const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
@@ -691,7 +729,12 @@
       });
     }
 
-    /* ========================== Actions (Saídas) ========================== */
+    /* ========================== Render Chat (REMOVIDO) ========================== */
+    function renderChat() {
+        // Vazio
+    }
+
+    /* ========================== Actions (Saídas - COM PERFORMANCE) ========================== */
     function addStudent(){
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
@@ -739,13 +782,11 @@
       });
     }
     
-    // === VERSÃO NOVA (Move para o histórico) ===
+    // === MODIFICADO: reject() agora move para o histórico ===
     async function reject(id) {
-      // 1. Encontra o registro na fila ativa
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
 
-      // 2. Prepara o registro final para o histórico
       const historicoEntry = {
         ...req,
         status: "rejected",
@@ -753,12 +794,10 @@
         reason: "Recusado/Cancelado"
       };
 
-      // 3. Cria o objeto de múltiplas escritas
       const updates = {};
       updates[`historicoSaidas/${id}`] = historicoEntry; // Adiciona ao histórico
       updates[`saidas/${id}`] = null; // Remove da fila ativa
 
-      // 4. Executa
       try {
         await update(ref(db), updates);
         toast("Pedido movido para o histórico.", "ok");
@@ -767,25 +806,21 @@
       }
     }
     
-    // === VERSÃO NOVA (Move para o histórico) ===
+    // === MODIFICADO: arrived() agora move para o histórico ===
     async function arrived(id) {
-      // 1. Encontra o registro na fila ativa
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
 
-      // 2. Prepara o registro final para o histórico
       const historicoEntry = {
-        ...req, // Pega todos os dados existentes (nome, hora, etc.)
+        ...req,
         status: "completed",
         returnTime: new Date().toISOString()
       };
 
-      // 3. Cria um objeto de "múltiplas escritas"
       const updates = {};
-      updates[`historicoSaidas/${id}`] = historicoEntry; // Adiciona ao histórico
-      updates[`saidas/${id}`] = null; // Remove da fila ativa
+      updates[`historicoSaidas/${id}`] = historicoEntry;
+      updates[`saidas/${id}`] = null;
 
-      // 4. Executa as duas operações de uma vez
       try {
         await update(ref(db), updates);
         toast("Aluno movido para o histórico.", "ok");
@@ -793,9 +828,7 @@
         toast("Erro ao mover aluno.", "error");
       }
       
-      // Limpeza imediata do alarme (lógica anterior mantida)
       if (state.alarmingStudents.has(id)) {
-        console.log(`Limpando alarme (imediato) para ${id}`);
         state.alarmingStudents.delete(id);
       }
       if (state.alarmLevelsCache[id]) {
@@ -803,19 +836,17 @@
       }
     }
     
-    // === CORREÇÃO: removeReq agora precisa saber de ONDE apagar ===
+    // === MODIFICADO: removeReq() agora checa os dois nós ===
     async function removeReq(id){
       const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída PERMANENTEMENTE?");
       if (!ok) return;
       
-      // 1. Descobrir se o item está na fila ativa ou no histórico
       const req = state.requests.find(r => r.id === id);
-      let path = `saidas/${id}`; // Padrão é a fila ativa
+      let path = `saidas/${id}`; // Padrão
       if (req && (req.status === 'completed' || req.status === 'rejected')) {
-        path = `historicoSaidas/${id}`; // Se completo/rejeitado, está no histórico
+        path = `historicoSaidas/${id}`; // Se está no histórico
       }
 
-      // 2. Apagar do nó correto
       remove(ref(db, path)).then(() => {
         toast("Registro excluído.", "ok");
       }).catch(err => {
@@ -823,6 +854,7 @@
       });
     }
 
+    // (Não modificado, já estava correto)
     function openEditSaidaModal(id) {
       const req = state.requests.find(r => r.id === id);
       if (!req) return toast("Registro não encontrado.", "error");
@@ -841,7 +873,7 @@
         </div>
         <div class="field">
           <label>Motivo</label>
-          <input id="edit-saida-reason" class="input" value="${req.reason || ''}" placeholder="Motivo da saída">
+          <input id="edit-saida-reason" class="input" value="${currentReason}" placeholder="Motivo da saída">
         </div>
         <div class="field">
           <label>Hora de Solicitação</label>
@@ -859,7 +891,7 @@
       openModal("Editar Saída", content, () => saveSaida(id));
     }
 
-    // === CORREÇÃO: saveSaida agora precisa saber para ONDE salvar/mover ===
+    // === MODIFICADO: saveSaida() agora sabe mover entre nós ===
     async function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
       const reason = ($("#edit-saida-reason").value || "").trim();
@@ -869,7 +901,6 @@
 
       if (!name) return toast("O nome não pode ficar em branco.", "error");
 
-      // 1. Montar o objeto de dados atualizado
       const updatesPayload = {
         userName: name,
         reason: reason || (state.settings.defaultReason || "Banheiro"),
@@ -885,6 +916,7 @@
       const currentReq = state.requests.find(r => r.id === id);
       if (!currentReq) return toast("Erro: Registro original não encontrado.", "error");
 
+      // Define novo status
       if (updatesPayload.returnTime) {
           updatesPayload.status = "completed";
       } else if (updatesPayload.departureTime) {
@@ -896,18 +928,17 @@
           updatesPayload.status = "rejected";
       }
       
-      // 2. Descobrir onde o registo *estava* e para onde *vai*
-      const wasInHistory = currentReq && (currentReq.status === 'completed' || currentReq.status === 'rejected');
+      // Descobre onde o registro *estava* e para onde *vai*
+      const wasInHistory = currentReq.status === 'completed' || currentReq.status === 'rejected';
       const newStatus = updatesPayload.status;
-      const willBeInHistory = (newStatus === 'completed' || newStatus === 'rejected');
+      const willBeInHistory = newStatus === 'completed' || newStatus === 'rejected';
 
-      // 3. Preparar a atualização atómica
       const updates = {};
       
       if (wasInHistory && !willBeInHistory) {
           // Mover: Histórico -> Fila Ativa
           updates[`historicoSaidas/${id}`] = null;
-          updates[`saidas/${id}`] = {...currentReq, ...updatesPayload}; // Mescla dados para não perder 'order' etc.
+          updates[`saidas/${id}`] = {...currentReq, ...updatesPayload};
       } else if (!wasInHistory && willBeInHistory) {
           // Mover: Fila Ativa -> Histórico
           updates[`saidas/${id}`] = null;
@@ -920,7 +951,6 @@
           updates[`saidas/${id}`] = {...currentReq, ...updatesPayload};
       }
 
-      // 4. Executar
       try {
         await update(ref(db), updates);
         toast("Registro atualizado!", "ok");
@@ -1005,7 +1035,10 @@
         closeModal();
       });
     }
-    
+
+    /* ========================== Actions (Chat - REMOVIDO) ========================== */
+    // Funções de Chat removidas
+
     /* ========================== Settings ========================== */
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
@@ -1025,17 +1058,17 @@
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
 
-    /* ========================== Backup / Reset ========================== */
+    /* ========================== Backup / Reset (COM PERFORMANCE E SEM CHAT) ========================== */
     async function downloadBackup(){
       const [saidasSnap, s5Snap, confSnap, historicoSnap] = await Promise.all([
         get(ref(db, "saidas")),
         get(ref(db, "s5Teams")),
         get(ref(db, "settings")),
-        get(ref(db, "historicoSaidas")), // NOVO
+        get(ref(db, "historicoSaidas")) 
       ]);
       const content = {
         saidas: saidasSnap.val() || {},
-        historicoSaidas: historicoSnap.val() || {}, // NOVO
+        historicoSaidas: historicoSnap.val() || {}, 
         s5Teams: s5Snap.val() || {},
         settings: confSnap.val() || {},
         exportedAt: new Date().toISOString()
@@ -1047,7 +1080,6 @@
       a.click();
       URL.revokeObjectURL(a.href);
     }
-    
     async function uploadBackup(file){
       try{
         const text = await file.text();
@@ -1058,25 +1090,25 @@
         
         const tasks = [];
         if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas));
-        if (data.historicoSaidas) tasks.push(set(ref(db, "historicoSaidas"), data.historicoSaidas)); // NOVO
+        if (data.historicoSaidas) tasks.push(set(ref(db, "historicoSaidas"), data.historicoSaidas));
         if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams));
         if (data.settings) tasks.push(set(ref(db, "settings"), data.settings));
-        
+        // REMOVIDO: data.chatMessages
         await Promise.all(tasks);
         toast("Backup importado!", "ok");
       }catch(e){
         if (e.message!=="cancel") toast("Falha ao importar.", "error");
       }
     }
-    
     async function resetAll(){
       const ok = await confirmBox("Resetar TUDO (saídas, histórico, 5S, configurações)?");
       if (!ok) return;
       await Promise.all([
         remove(ref(db, "saidas")),
-        remove(ref(db, "historicoSaidas")), // NOVO
+        remove(ref(db, "historicoSaidas")),
         remove(ref(db, "s5Teams")),
         remove(ref(db, "settings")),
+        // REMOVIDO: remove chat
       ]);
       toast("Tudo resetado.", "ok");
     }
@@ -1094,7 +1126,8 @@
         let shouldBeep = false;
         const { alertLevels, persistentAlarmMinutes } = state.settings;
 
-        state.requests.forEach(r=>{
+        // Itera sobre a fila ativa (pendingAll)
+        filaAtivaState.forEach(r=>{ 
           const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`); 
           const currentVisualLevel = state.alarmLevelsCache[r.id] || 0;
           let newVisualLevel = 0; 
@@ -1136,12 +1169,14 @@
                 if(alertClass) el.classList.add(alertClass);
             }
             
+            // BIPE DE TRANSIÇÃO
             if (newVisualLevel > currentVisualLevel) {
                 console.log(`Bipe de Transição para: ${r.userName} (Nível ${newVisualLevel})`);
                 shouldBeep = true; 
                 state.alarmLevelsCache[r.id] = newVisualLevel; 
             }
             
+            // ALARME PERSISTENTE
             if (elapsedMinutes >= persistentAlarmMinutes) {
               if (!state.alarmingStudents.has(r.id)) {
                 console.log(`Alarme PERSISTENTE para: ${r.userName}`);
@@ -1160,7 +1195,6 @@
                 delete state.alarmLevelsCache[r.id];
              }
              if (state.alarmingStudents.has(r.id)) {
-                console.log(`Limpando alarme (Loop) para ${r.userName} (Status: ${r.status})`);
                 state.alarmingStudents.delete(r.id);
              }
              if (el) {
@@ -1182,6 +1216,7 @@
         }
       }, 5000); 
     }
+
 
     /* ========================== Tabs & Events ========================== */
     function activateTab(id){
@@ -1336,7 +1371,10 @@
             toast("Alarmes silenciados.", "info");
         }
       });
+      
+      // REMOVIDO: Eventos do Chat
 
+      // MODIFICADO: Login
       $("#login-btn").addEventListener("click", ()=> {
         initAudio();
         login($("#login-user").value, $("#login-pin").value)
@@ -1346,16 +1384,23 @@
 
     /* ========================== Boot ========================== */
     function boot(){
-      if (tryAutoLogin()) {
-        // Login bem sucedido
-      } else {
-        showLogin(true);
-      }
-      
       bindEvents();
       bindRealtime();
       startClock();
       activateTab("saidas");
+
+      // MODIFICADO: Gerenciador de estado de Autenticação
+      onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          // Usuário está logado
+          state.isLoggedIn = true;
+          showLogin(false); // Esconde o modal de login
+        } else {
+          // Usuário está deslogado
+          state.isLoggedIn = false;
+          showLogin(true); // Mostra o modal de login
+        }
+      });
     }
 
     // Iniciar a aplicação
