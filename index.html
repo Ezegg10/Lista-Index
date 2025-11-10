@@ -69,36 +69,14 @@
     .card{border:1px solid var(--border);background:var(--bg-card);border-radius:16px;padding:1rem 1rem 1.25rem 1rem;box-shadow:0 10px 25px -12px rgba(0,0,0,.25)}
     .dark .card{background:#0b1220}
     
-    .card-chat {
-      padding: 0;
-      height: 70vh; 
-      display: flex;
-      overflow: hidden;
-    }
+    /* REMOVIDO: Estilos de Chat */
     
     .section-title{font-weight:800}
     .badge{background:#fde68a;color:#78350f;border-radius:9999px;padding:.1rem .55rem;font-size:.75rem;font-weight:800}
     .field>label{display:block;font-size:.85rem;opacity:.8;margin-bottom:.25rem}
-    .tab-btn{border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;text-align:left;font-weight:800;background:transparent; display: flex; align-items: center; position: relative; /* Para o badge */}
+    .tab-btn{border:1px solid var(--border);border-radius:10px;padding:.55rem .7rem;text-align:left;font-weight:800;background:transparent; display: flex; align-items: center; position: relative;}
     .tab-btn.active{background:#2563eb;color:#fff;border-color:#2563eb}
-    
-    .notification-badge {
-      position: absolute;
-      top: 6px;
-      right: 8px;
-      background-color: #ef4444;
-      color: white;
-      font-size: 10px;
-      font-weight: 800;
-      width: 18px;
-      height: 18px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 2px solid #2563eb; /* Cor de fundo do botão ativo */
-    }
-    
+        
     #toast{background:#111827;color:#fff;border-radius:9999px;padding:.6rem 1rem;font-weight:800;box-shadow:0 10px 25px -12px rgba(0,0,0,.35)}
     
     .pending-item, .approved-item { cursor: grab; }
@@ -113,17 +91,19 @@
     .dark .approved-item{background:#052e1a}
     .hidden{display:none}
     #modal-overlay.flex { display: flex; }
+    
+    /* REMOVIDO: Estilo de chat-popup-overlay */
 
     /* Estilos de Alarme */
     @keyframes pulse-red {
       0%, 100% { background-color: #ef4444; color: white; }
       50% { background-color: #f87171; color: white; }
     }
-    .alarm-level-1 { background-color: #fef3c7; } /* Amarelo claro */
+    .alarm-level-1 { background-color: #fef3c7; }
     .dark .alarm-level-1 { background-color: #422006; }
-    .alarm-level-2 { background-color: #fde68a; } /* Amarelo mais forte */
+    .alarm-level-2 { background-color: #fde68a; }
     .dark .alarm-level-2 { background-color: #78350f; }
-    .alarm-level-3 { background-color: #fca5a5; } /* Vermelho claro */
+    .alarm-level-3 { background-color: #fca5a5; }
     .dark .alarm-level-3 { background-color: #7f1d1d; }
     .alarm-level-4 { 
       animation: pulse-red 1.5s infinite; 
@@ -134,141 +114,8 @@
       border-color: #ef4444;
     }
 
-    /* Estilos de Chat */
-    .chat-container {
-      display: flex;
-      width: 100%;
-      height: 100%;
-    }
-    .chat-sidebar {
-      width: 280px;
-      border-right: 1px solid var(--border);
-      background: var(--bg-secondary);
-      display: flex;
-      flex-direction: column;
-    }
-    .chat-sidebar-header {
-      padding: 0.75rem;
-      font-weight: 800;
-      border-bottom: 1px solid var(--border);
-    }
-    .chat-contact-list {
-      flex-grow: 1;
-      overflow-y: auto;
-    }
-    .chat-contact {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-    }
-    .chat-contact:hover {
-      background: rgba(148,163,184,.1);
-    }
-    .chat-contact.active {
-      background: var(--bg-primary);
-      font-weight: 800;
-      color: #2563eb;
-    }
+    /* REMOVIDO: Todos os estilos de .chat-* e .presence-* */
     
-    .chat-main {
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      background: var(--bg-primary);
-    }
-    .chat-main-header {
-      padding: 0.75rem 1rem;
-      font-weight: 800;
-      border-bottom: 1px solid var(--border);
-      background: var(--bg-secondary);
-    }
-    
-    .chat-box {
-      flex-grow: 1;
-      overflow-y: auto;
-      padding: 1rem;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-    .chat-input-area {
-      border-top: 1px solid var(--border);
-      padding: 0.5rem;
-      display: flex;
-      gap: 0.5rem;
-      background: var(--bg-secondary);
-    }
-    
-    .chat-msg { position: relative; display: flex; flex-direction: column; }
-    .chat-msg.sent { align-items: flex-end; }
-    .chat-msg.received { align-items: flex-start; }
-    
-    .chat-msg-bubble { 
-      max-w-xs; padding: .5rem .75rem; border-radius: 12px; 
-      word-wrap: break-word; font-size: 0.9rem;
-    }
-    .chat-msg.sent .chat-msg-bubble { background: #2563eb; color: white; border-bottom-right-radius: 4px; }
-    .chat-msg.received .chat-msg-bubble { background: #e2e8f0; border: 1px solid var(--border); border-bottom-left-radius: 4px; }
-    .dark .chat-msg.received .chat-msg-bubble { background: #1e293b; color: #f8fafc; border-color: var(--border); }
-    
-    .chat-msg-user { font-size: .75rem; font-weight: 800; opacity: .7; margin: 0 .25rem .1rem .25rem; }
-    
-    .chat-msg-time { 
-      font-size: .65rem; font-weight: 700; opacity: .6; 
-      margin: 0.1rem .25rem 0 .25rem;
-    }
-    .chat-msg.sent .chat-msg-time { text-align: right; }
-    .chat-msg.received .chat-msg-time { text-align: left; }
-
-    .chat-msg-actions {
-      position: absolute;
-      top: 0;
-      display: none;
-      gap: 4px;
-      z-index: 10;
-    }
-    .chat-msg.sent .chat-msg-actions { right: 0; }
-    .chat-msg.received .chat-msg-actions { left: 0; }
-    .chat-msg:hover .chat-msg-actions { display: flex; }
-    .chat-msg-actions button {
-      padding: 2px 4px !important;
-      font-size: 10px !important;
-      line-height: 1 !important;
-      min-width: 20px !important;
-      border-radius: 6px !important;
-      background-color: rgba(0,0,0,0.2);
-    }
-    .dark .chat-msg-actions button { background-color: rgba(255,255,255,0.2); }
-    
-    .presence-dot {
-      width: 10px;
-      height: 10px;
-      border-radius: 50%;
-      margin-right: 8px;
-      display: inline-block;
-      flex-shrink: 0; 
-    }
-    .online-dot {
-      background-color: #22c55e;
-      border: 1px solid rgba(255,255,255,0.5);
-      box-shadow: 0 0 5px #22c55e;
-    }
-    .offline-dot {
-      background-color: #94a3b8;
-      border: 1px solid rgba(0,0,0,0.1);
-    }
-    .chat-contact-details {
-      display: flex;
-      align-items: center;
-      min-width: 0; 
-    }
-    .chat-contact-name {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
   </style>
 
 </head>
@@ -326,13 +173,7 @@
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
             Controle de Saídas
           </button>
-          
-          <button class="tab-btn" data-tab="chat">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clip-rule="evenodd" /></svg>
-            Chat
-            <span id="chat-notification-badge" class="notification-badge hidden">0</span> 
-          </button>
-          
+                    
           <button class="tab-btn" data-tab="s5">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h.01a1 1 0 100-2H10zm3 0a1 1 0 000 2h.01a1 1 0 100-2H13z" clip-rule="evenodd" /></svg>
             Gestão 5S
@@ -393,31 +234,6 @@
           </div>
         </div>
 
-        <div id="tab-chat" class="card card-chat hidden">
-          <div class="chat-container">
-            <aside class="chat-sidebar">
-              <div class="chat-sidebar-header">Contatos</div>
-              <nav id="chat-contact-list" class="chat-contact-list">
-                <p class="p-4 text-sm opacity-70">Carregando...</p>
-              </nav>
-            </aside>
-            
-            <main class="chat-main">
-              <header id="chat-main-header" class="chat-main-header">
-                Selecione um contato para conversar
-              </header>
-              <div id="chat-box" class="chat-box">
-              </div>
-              <div id="chat-input-area" class="chat-input-area hidden">
-                <input id="chat-input" class="input flex-1" placeholder="Digite sua mensagem...">
-                <button id="chat-send" class="btn-primary px-5">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.429A1 1 0 009.175 17V4.609a1 1 0 00-1.447-.894l-5 1.428zM10.894 2.553l7 14a1 1 0 001.169-1.409l-5-1.429A1 1 0 0013.825 17V4.609a1 1 0 00-1.447-.894l5 1.428z" /></svg>
-                </button>
-              </div>
-            </main>
-          </div>
-        </div>
-
         <div id="tab-s5" class="card hidden">
           <h2 class="text-xl font-bold mb-4 text-center">Gestão de Qualidade 5S</h2>
           <div class="grid sm:grid-cols-2 gap-3">
@@ -460,7 +276,29 @@
 
     <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
 
-    </div>
+    <!-- ====================================================== -->
+    <!-- === BOTÃO FLUTUANTE (AGORA LINK) === -->
+    <!-- ====================================================== -->
+    
+    <!-- REMOVIDO: Popup do Chat -->
+
+    <!-- Botão Flutuante (FAB) do Chat -->
+    <a id="fab-form-link" 
+       href="https://forms.gle/HJLqG9VJWkmg3c9R6" 
+       target="_blank" 
+       rel="noopener noreferrer"
+       class="fixed bottom-6 right-6 z-40 btn-primary rounded-full p-4 shadow-lg"
+       title="Abrir Formulário de Feedback">
+      <!-- Ícone de "Formulário" (Clipboard List) -->
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+      </svg>
+    </a>
+    <!-- ====================================================== -->
+    <!-- === FIM: Botão Flutuante === -->
+    <!-- ====================================================== -->
+
+  </div>
 
   <script>
     // Reveal after JS initialization starts
@@ -490,7 +328,7 @@
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
     
-    /* ========================== State ========================== */
+    /* ========================== State (Chat Removido) ========================== */
     const state = {
       session: null,
       settings: {
@@ -501,13 +339,7 @@
       requests: [],
       s5Teams: [],
       
-      users: {}, 
-      selectedChatUser: null,
-      currentMessages: [], 
-      messageListener: null,
-      lastMessageTimestamp: 0,
-      globalMessageListeners: [], 
-      unreadChats: new Set(),
+      // REMOVIDO: Estado do Chat
       
       audioInitialized: false, 
       audioCtx: null, 
@@ -541,12 +373,7 @@
         return date.toISOString();
     };
 
-    const formatChatTime = (isoString) => {
-        if (!isoString) return '';
-        try {
-            return new Date(isoString).toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' });
-        } catch (e) { return ''; }
-    };
+    // REMOVIDO: formatChatTime
 
     function toast(msg, kind="info"){
       const box = $("#toast");
@@ -556,7 +383,7 @@
       setTimeout(()=>box.classList.add("hidden"), 3000);
     }
 
-    /* ========================== Audio ========================== */
+    /* ========================== Audio (Notificação Removida) ========================== */
     function initAudio() {
       if (state.audioInitialized) return;
       try {
@@ -589,22 +416,7 @@
       }
     }
     
-    function playNotificationSound() {
-      if (!state.audioCtx) return;
-      try {
-        const oscillator = state.audioCtx.createOscillator();
-        const gainNode = state.audioCtx.createGain();
-        oscillator.connect(gainNode);
-        gainNode.connect(state.audioCtx.destination);
-        oscillator.type = 'triangle'; 
-        oscillator.frequency.setValueAtTime(1200, state.audioCtx.currentTime);
-        gainNode.gain.setValueAtTime(0.3, state.audioCtx.currentTime); 
-        oscillator.start(state.audioCtx.currentTime);
-        oscillator.stop(state.audioCtx.currentTime + 0.1); 
-      } catch (e) {
-        console.error("Falha ao tocar som de notificação:", e);
-      }
-    }
+    // REMOVIDO: playNotificationSound()
 
     /* ========================== Modal Genérico ========================== */
     const $modalOverlay = $("#modal-overlay");
@@ -669,7 +481,7 @@
       });
     }
 
-    /* ========================== Login / Logout ========================== */
+    /* ========================== Login / Logout (Chat Removido) ========================== */
     const USERS = { "ezequiel": "Gois", "larissa":"7524" };
 
     function showLogin(show){
@@ -696,15 +508,10 @@
         state.session = { user, ts: Date.now() };
         localStorage.setItem("sessionUser", JSON.stringify(state.session));
         
-        const userRef = ref(db, `users/${user}`);
-        set(userRef, { lastSeen: new Date().toISOString() });
-        onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
-
+        // REMOVIDO: Firebase 'set' para users
+        
         showLogin(false);
         toast("Bem-vindo!", "ok");
-        
-        listenForGlobalMessages();
-        
         return true;
       }
       $("#login-msg").classList.remove("hidden");
@@ -713,27 +520,17 @@
     }
 
     function logout(){
-      if (state.session && state.session.user) {
-        const userRef = ref(db, `users/${state.session.user}`);
-        onDisconnect(userRef).cancel(); 
-        set(userRef, { lastSeen: new Date(0).toISOString() }); 
-      }
-      stopListeningForGlobalMessages(); 
-
+      // REMOVIDO: Firebase 'set' para users (onDisconnect)
+      
       localStorage.removeItem("sessionUser");
       state.session = null;
       
-      $("#chat-contact-list").innerHTML = "";
-      $("#chat-box").innerHTML = "";
-      $("#chat-main-header").textContent = "Selecione um contato para conversar";
-      $("#chat-input-area").classList.add("hidden");
-      state.selectedChatUser = null;
-      if (state.messageListener) off(state.messageListener);
+      // REMOVIDO: Limpeza de UI do Chat
       
       showLogin(true);
     }
 
-    /* ========================== Data bindings ========================== */
+    /* ========================== Data bindings (Chat Removido) ========================== */
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
@@ -758,13 +555,7 @@
         renderS5();
       });
 
-      onValue(ref(db, "users"), (snap)=>{
-        state.users = snap.val() || {};
-        if(state.session) { 
-          renderUserList();
-          listenForGlobalMessages();
-        }
-      });
+      // REMOVIDO: Listener 'users'
     }
 
     /* ========================== Render Saídas ========================== */
@@ -914,169 +705,10 @@
       });
     }
 
-    /* ========================== Render Chat (1-para-1) ========================== */
-    function renderUserList() {
-      const $list = $("#chat-contact-list");
-      if (!$list) return;
-      $list.innerHTML = "";
-      const currentUser = state.session?.user;
-      if (!currentUser) return;
-      
-      const admins = ["Ezequiel", "Larissa"];
-      
-      admins.forEach(adminName => {
-        if (adminName === currentUser) return; 
-        
-        const lastSeenDate = new Date(state.users[adminName]?.lastSeen || 0);
-        const isOnline = (new Date() - lastSeenDate) < 5 * 60 * 1000; 
-        
-        const div = document.createElement("div");
-        div.className = "chat-contact";
-        div.dataset.userName = adminName;
-        
-        div.innerHTML = `
-          <div class="chat-contact-details">
-            <span class="presence-dot ${isOnline ? 'online-dot' : 'offline-dot'}"></span>
-            <span class="chat-contact-name">${adminName} (Admin)</span>
-          </div>
-        `;
-        
-        if (state.selectedChatUser === adminName) {
-          div.classList.add("active");
-        }
-        div.onclick = () => selectChat(adminName);
-        $list.appendChild(div);
-      });
-      
-      const divider = document.createElement("div");
-      divider.className = "px-4 pt-2 pb-1 text-xs font-bold opacity-60";
-      divider.textContent = "ALUNOS";
-      $list.appendChild(divider);
-
-      Object.keys(state.users)
-        .filter(userName => userName !== currentUser)
-        .filter(userName => !admins.includes(userName))
-        .sort()
-        .forEach(userName => {
-          const lastSeenDate = new Date(state.users[userName]?.lastSeen || 0);
-          const isOnline = (new Date() - lastSeenDate) < 5 * 60 * 1000;
-
-          const div = document.createElement("div");
-          div.className = "chat-contact";
-          div.dataset.userName = userName;
-          
-          div.innerHTML = `
-            <div class="chat-contact-details">
-              <span class="presence-dot ${isOnline ? 'online-dot' : 'offline-dot'}"></span>
-              <span class="chat-contact-name">${userName}</span>
-            </div>
-          `;
-          
-          if (state.selectedChatUser === userName) {
-            div.classList.add("active");
-          }
-          div.onclick = () => selectChat(userName);
-          $list.appendChild(div);
-        });
-    }
-
-    function selectChat(userName) {
-      if (!state.session || !state.session.user) return;
-      
-      state.selectedChatUser = userName;
-      state.lastMessageTimestamp = 0;
-      renderUserList(); 
-
-      state.unreadChats.delete(userName);
-      updateNotificationBadge();
-
-      $("#chat-main-header").textContent = `Conversando com ${userName}`;
-      $("#chat-input-area").classList.remove("hidden");
-      $("#chat-box").innerHTML = `<p class="text-sm opacity-70 italic p-4">Carregando mensagens...</p>`;
-
-      const currentUser = state.session.user;
-      const conversation_id = [currentUser, userName].sort().join('_');
-      
-      if (state.messageListener) {
-        off(state.messageListener); 
-      }
-
-      const messagesRef = ref(db, `messages/${conversation_id}`);
-      state.messageListener = messagesRef; 
-
-      onValue(messagesRef, (snap) => {
-        const data = snap.val() || {};
-        state.currentMessages = Object.entries(data).map(([id, v]) => ({ id, ...v }));
-        state.currentMessages.sort((a,b) => new Date(a.timestamp) - new Date(b.timestamp));
-        renderSelectedChatMessages();
-      });
-    }
-    
-    function renderSelectedChatMessages() {
-        const box = $("#chat-box");
-        if (!box) return;
-        if (!state.selectedChatUser) {
-          box.innerHTML = `<p class="text-sm opacity-70 italic p-4">Selecione um contato para conversar</p>`;
-          return;
-        }
-
-        const currentUser = state.session.user;
-        box.innerHTML = "";
-        
-        if (state.currentMessages.length === 0) {
-            state.lastMessageTimestamp = 0; 
-            box.innerHTML = `<p class="text-sm opacity-70 italic p-4">Nenhuma mensagem ainda.</p>`;
-            return;
-        }
-
-        state.currentMessages.forEach(msg => {
-            const isSent = (msg.from === currentUser);
-            
-            const msgEl = document.createElement("div");
-            msgEl.className = `chat-msg ${isSent ? 'sent' : 'received'}`;
-            
-            if (!isSent) {
-              const userLabel = document.createElement("span");
-              userLabel.className = "chat-msg-user";
-              userLabel.textContent = cleanName(msg.from); 
-              msgEl.append(userLabel);
-            }
-            
-            const bubble = document.createElement("div");
-            bubble.className = "chat-msg-bubble";
-            bubble.textContent = msg.text || "";
-            
-            const timeEl = document.createElement("span");
-            timeEl.className = "chat-msg-time";
-            timeEl.textContent = formatChatTime(msg.timestamp);
-
-            msgEl.append(bubble, timeEl);
-            
-            if (isSent) {
-                const actionsDiv = document.createElement("div");
-                actionsDiv.className = "chat-msg-actions";
-                actionsDiv.innerHTML = `
-                    <button class="btn-secondary btn-icon" data-act="edit-chat" data-id="${msg.id}">✏️</button>
-                    <button class="btn-danger btn-icon" data-act="del-chat" data-id="${msg.id}">🗑</button>
-                `;
-                msgEl.appendChild(actionsDiv);
-            }
-
-            box.appendChild(msgEl);
-        });
-
-        const lastMsg = state.currentMessages[state.currentMessages.length - 1];
-        if (lastMsg) {
-          const lastMsgTime = new Date(lastMsg.timestamp).getTime();
-          
-          if (lastMsg.from !== currentUser && lastMsgTime > state.lastMessageTimestamp) {
-            playNotificationSound();
-          }
-          state.lastMessageTimestamp = lastMsgTime;
-        }
-
-        box.scrollTop = box.scrollHeight;
-    }
+    /* ========================== Render Chat (REMOVIDO) ========================== */
+    // REMOVIDO: renderUserList
+    // REMOVIDO: selectChat
+    // REMOVIDO: renderSelectedChatMessages
 
     /* ========================== Actions (Saídas) ========================== */
     function addStudent(){
@@ -1132,15 +764,12 @@
       });
     }
     
-    // *** CORREÇÃO APLICADA AQUI ***
     function arrived(id){
-      // Envia a atualização para o Firebase
       update(ref(db, "saidas/"+id), {
         status: "completed",
         returnTime: new Date().toISOString()
       });
       
-      // Limpa o estado local IMEDIATAMENTE para parar o alarme (corrige a race condition)
       if (state.alarmingStudents.has(id)) {
         console.log(`Limpando alarme (imediato) para ${id}`);
         state.alarmingStudents.delete(id);
@@ -1175,7 +804,7 @@
         </div>
         <div class="field">
           <label>Motivo</label>
-          <input id="edit-saida-reason" class="input" value="${currentReason}" placeholder="Motivo da saída">
+          <input id="edit-saida-reason" class="input" value="${req.reason || ''}" placeholder="Motivo da saída">
         </div>
         <div class="field">
           <label>Hora de Solicitação</label>
@@ -1307,146 +936,13 @@
       });
     }
 
-    /* ========================== Actions (Chat) ========================== */
+    /* ========================== Actions (Chat - REMOVIDO) ========================== */
+    // REMOVIDO: sendChatMessage
+    // REMOVIDO: deleteChatMessage
+    // REMOVIDO: openEditChatMessageModal
+    // REMOVIDO: saveChatMessage
     
-    function sendChatMessage() {
-        const input = $("#chat-input");
-        const text = input.value.trim();
-        if (!text) return;
-        
-        const currentUser = state.session ? state.session.user : null;
-        if (!currentUser) {
-            return toast("Você precisa estar logado para enviar mensagens.", "error");
-        }
-        if (!state.selectedChatUser) {
-            return toast("Selecione um contato para enviar a mensagem.", "error");
-        }
-        
-        const targetUser = state.selectedChatUser;
-        const conversation_id = [currentUser, targetUser].sort().join('_');
-
-        const payload = {
-            from: currentUser,
-            to: targetUser,
-            text: text,
-            timestamp: new Date().toISOString(),
-            read: false
-        };
-
-        push(ref(db, `messages/${conversation_id}`), payload).then(() => {
-            input.value = "";
-            input.focus();
-        }).catch(err => {
-            toast("Erro ao enviar mensagem.", "error");
-        });
-    }
-
-    async function deleteChatMessage(id) {
-        const msg = state.currentMessages.find(m => m.id === id);
-        const currentUser = state.session?.user;
-        const targetUser = state.selectedChatUser;
-        
-        if (!msg || !currentUser || !targetUser) return;
-        
-        if (msg.from === currentUser) {
-          const ok = await confirmBox("Tem certeza que deseja excluir esta mensagem?");
-          if (ok) {
-              const conversation_id = [currentUser, targetUser].sort().join('_');
-              remove(ref(db, `messages/${conversation_id}/${id}`));
-              toast("Mensagem excluída.", "ok");
-          }
-        }
-    }
-
-    function openEditChatMessageModal(id) {
-        const msg = state.currentMessages.find(m => m.id === id);
-        if (!msg || msg.from !== state.session.user) return toast("Mensagem não encontrada.", "error");
-
-        const content = `
-            <div class="field">
-              <label>Editar Mensagem</label>
-              <textarea id="edit-chat-text" class="input" rows="3">${msg.text}</textarea>
-            </div>
-        `;
-        openModal("Editar Mensagem", content, () => saveChatMessage(id));
-    }
-
-    function saveChatMessage(id) {
-        const newText = $("#edit-chat-text").value.trim();
-        const currentUser = state.session?.user;
-        const targetUser = state.selectedChatUser;
-
-        if (newText && currentUser && targetUser) {
-            const conversation_id = [currentUser, targetUser].sort().join('_');
-            update(ref(db, `messages/${conversation_id}/${id}`), { text: newText });
-            toast("Mensagem atualizada!", "ok");
-            closeModal();
-        } else {
-            toast("A mensagem não pode ficar vazia.", "error");
-        }
-    }
-    
-    /* ========================== Notificações de Chat ========================== */
-    
-    function stopListeningForGlobalMessages() {
-      state.globalMessageListeners.forEach(({ listenerRef, listenerFn }) => {
-        off(listenerRef, 'value', listenerFn); 
-      });
-      state.globalMessageListeners = []; 
-      state.unreadChats = new Set(); 
-      updateNotificationBadge(); 
-    }
-    
-    function listenForGlobalMessages() {
-      if (!state.session || !state.session.user) return;
-      
-      stopListeningForGlobalMessages(); 
-      const currentUser = state.session.user;
-
-      const admins = ["Ezequiel", "Larissa"];
-      const otherUsers = Object.keys(state.users);
-      const allPossiblePartners = [...new Set([...admins, ...otherUsers])];
-
-      allPossiblePartners.forEach(partner => {
-        if (partner === currentUser) return;
-
-        const conversation_id = [currentUser, partner].sort().join('_');
-        const listenerRef = ref(db, `messages/${conversation_id}`);
-        
-        const listenerFn = (snap) => {
-          const data = snap.val() || {};
-          const messages = Object.values(data);
-          if (messages.length === 0) {
-             state.unreadChats.delete(partner);
-             updateNotificationBadge();
-             return;
-          }
-          
-          const lastMessage = messages[messages.length - 1];
-
-          if (lastMessage && lastMessage.from === partner && state.selectedChatUser !== partner) {
-            state.unreadChats.add(partner);
-          } else if (state.selectedChatUser === partner) {
-            state.unreadChats.delete(partner);
-          }
-          
-          updateNotificationBadge();
-        };
-        
-        onValue(listenerRef, listenerFn); 
-        state.globalMessageListeners.push({ listenerRef, listenerFn });
-      });
-    }
-    
-    function updateNotificationBadge() {
-      const $badge = $("#chat-notification-badge");
-      if (state.unreadChats.size > 0) {
-        $badge.textContent = state.unreadChats.size;
-        $badge.classList.remove("hidden");
-      } else {
-        $badge.classList.add("hidden");
-      }
-    }
+    /* ========================== Notificações de Chat (REMOVIDO) ========================== */
     
     /* ========================== Settings ========================== */
     function saveSettings(){
@@ -1467,21 +963,19 @@
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
 
-    /* ========================== Backup / Reset ========================== */
+    /* ========================== Backup / Reset (Chat Removido) ========================== */
     async function downloadBackup(){
-      const [saidasSnap, s5Snap, confSnap, messagesSnap, usersSnap] = await Promise.all([
+      const [saidasSnap, s5Snap, confSnap] = await Promise.all([
         get(ref(db, "saidas")),
         get(ref(db, "s5Teams")),
         get(ref(db, "settings")),
-        get(ref(db, "messages")),
-        get(ref(db, "users"))
+        // REMOVIDO: messagesSnap, usersSnap
       ]);
       const content = {
         saidas: saidasSnap.val() || {},
         s5Teams: s5Snap.val() || {},
         settings: confSnap.val() || {},
-        messages: messagesSnap.val() || {},
-        users: usersSnap.val() || {},
+        // REMOVIDO: messages, users
         exportedAt: new Date().toISOString()
       };
       const blob = new Blob([JSON.stringify(content, null, 2)], {type:"application/json"});
@@ -1504,8 +998,7 @@
         if (data.saidas) tasks.push(set(ref(db, "saidas"), data.saidas));
         if (data.s5Teams) tasks.push(set(ref(db, "s5Teams"), data.s5Teams));
         if (data.settings) tasks.push(set(ref(db, "settings"), data.settings));
-        if (data.messages) tasks.push(set(ref(db, "messages"), data.messages)); 
-        if (data.users) tasks.push(set(ref(db, "users"), data.users));
+        // REMOVIDO: data.messages, data.users
         
         await Promise.all(tasks);
         toast("Backup importado!", "ok");
@@ -1515,36 +1008,34 @@
     }
     
     async function resetAll(){
-      const ok = await confirmBox("Resetar TUDO (saídas, 5S, chats, utilizadores, configurações)?");
+      const ok = await confirmBox("Resetar TUDO (saídas, 5S, configurações)? O chat já foi removido.");
       if (!ok) return;
       await Promise.all([
         remove(ref(db, "saidas")),
         remove(ref(db, "s5Teams")),
         remove(ref(db, "settings")),
-        remove(ref(db, "messages")),
-        remove(ref(db, "users"))
+        // REMOVIDO: remove messages, users
       ]);
       toast("Tudo resetado.", "ok");
     }
 
-    /* ========================== Clock & alerts (LÓGICA CORRIGIDA) ========================== */
+    /* ========================== Clock & alerts ========================== */
     function startClock(){
       if (state.timers.clock) clearInterval(state.timers.clock);
       if (state.timers.alert) clearInterval(state.timers.alert);
       state.timers.alert = null; 
 
-      // Timer principal (a cada 1 segundo) - Atualiza UI e dispara bipes de TRANSIÇÃO
       state.timers.clock = setInterval(()=>{
         const now = Date.now();
         $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", {hour12:false});
         
-        let shouldBeep = false; // Flag para tocar o bipe de transição
+        let shouldBeep = false;
         const { alertLevels, persistentAlarmMinutes } = state.settings;
 
         state.requests.forEach(r=>{
           const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`); 
           const currentVisualLevel = state.alarmLevelsCache[r.id] || 0;
-          let newVisualLevel = 0; // Nível 0 = normal
+          let newVisualLevel = 0; 
 
           if (r.status==="pending"){
             const durEl = document.querySelector(`[data-dur="${r.id}-wait"]`);
@@ -1602,8 +1093,6 @@
             }
           } 
           
-          // *** CORREÇÃO: Usando ELSE para limpar ***
-          // Só roda se o status for "completed" ou "rejected"
           else { 
              if (state.alarmLevelsCache[r.id]) {
                 delete state.alarmLevelsCache[r.id];
@@ -1612,19 +1101,18 @@
                 console.log(`Limpando alarme (Loop) para ${r.userName} (Status: ${r.status})`);
                 state.alarmingStudents.delete(r.id);
              }
-             if (el) { // el será null se o item já foi para o histórico
+             if (el) {
                 el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
              }
           }
-        }); // Fim do loop forEach
+        }); 
 
         if (shouldBeep) {
             playBeep();
         }
 
-      }, 1000); // Fim do timer de 1 segundo
+      }, 1000); 
 
-      // Timer de Alarme PERSISTENTE (a cada 5 segundos)
       state.timers.alert = setInterval(() => {
         if (state.alarmingStudents.size > 0 && state.alarmOn) {
             console.log("Bipe de alarme persistente (Repetição)...");
@@ -1632,10 +1120,8 @@
         }
       }, 5000); 
     }
-    /* ========================== FIM DA LÓGICA DE ALARME ========================== */
 
-
-    /* ========================== Tabs & Events ========================== */
+    /* ========================== Tabs & Events (Chat Removido) ========================== */
     function activateTab(id){
       $$(".tab-btn").forEach(b=>b.classList.remove("active"));
       $$("div[id^='tab-']").forEach(c=>c.classList.add("hidden")); 
@@ -1645,11 +1131,6 @@
       
       if ($btn) $btn.classList.add("active");
       if ($tab) $tab.classList.remove("hidden");
-      
-      if (id === 'chat' && state.selectedChatUser) {
-          state.unreadChats.delete(state.selectedChatUser);
-          updateNotificationBadge();
-      }
     }
 
     function bindEvents(){
@@ -1666,76 +1147,61 @@
         const act = btn.dataset.act, id = btn.dataset.id;
         if (act==="approve") approve(id);
         if (act==="reject") reject(id);
-        if (act==="return") arrived(id); // *** CHAMA A FUNÇÃO CORRIGIDA ***
+        if (act==="return") arrived(id);
         if (act==="del-saida") removeReq(id);
         if (act==="edit-saida") openEditSaidaModal(id);
       });
 
       // Drag-n-Drop (Fila)
       let dragSrcId = null;
-
       function cleanupDragStyles() {
            $$('#pending-list li').forEach(li => {
               li.classList.remove('drag-over-top', 'drag-over-bottom', 'dragging');
           });
           dragSrcId = null;
       }
-
       pList.addEventListener("dragstart", (e) => {
           const li = e.target.closest('li[data-drag-id]');
           if (!li || e.target.tagName === 'BUTTON') return e.preventDefault();
-          
           dragSrcId = li.dataset.dragId;
           e.dataTransfer.effectAllowed = 'move';
           e.dataTransfer.setData('text/plain', dragSrcId);
-          
           setTimeout(() => {
               if (dragSrcId) li.classList.add("dragging");
           }, 0);
       });
-
       pList.addEventListener("dragover", (e) => {
           e.preventDefault();
           if (!dragSrcId) return;
-          
           e.dataTransfer.dropEffect = 'move';
           const destLi = e.target.closest('li[data-drag-id]');
-          
           $$('#pending-list li').forEach(li => {
               li.classList.remove('drag-over-top', 'drag-over-bottom');
           });
-
           if (!destLi || destLi.dataset.dragId === dragSrcId) return;
-
           const rect = destLi.getBoundingClientRect();
           const midY = rect.top + rect.height / 2;
-          
           if (e.clientY < midY) {
               destLi.classList.add('drag-over-top');
           } else {
               destLi.classList.add('drag-over-bottom');
           }
       });
-
       pList.addEventListener("dragleave", (e) => {
           const destLi = e.target.closest('li[data-drag-id]');
           if (destLi) {
               destLi.classList.remove('drag-over-top', 'drag-over-bottom');
           }
       });
-
       pList.addEventListener("drop", (e) => {
           e.preventDefault();
           if (!dragSrcId) return cleanupDragStyles();
-
           const destLi = e.target.closest('li[data-drag-id]');
           if (!destLi || destLi.dataset.dragId === dragSrcId) {
               return cleanupDragStyles();
           }
-
           const srcLi = pList.querySelector(`li[data-drag-id="${dragSrcId}"]`);
           if (!srcLi) return cleanupDragStyles();
-
           const rect = destLi.getBoundingClientRect();
           const midY = rect.top + rect.height / 2;
           if (e.clientY < midY) {
@@ -1743,11 +1209,9 @@
           } else {
               pList.insertBefore(srcLi, destLi.nextSibling);
           }
-          
           updateQueueOrder(); 
           cleanupDragStyles();
       });
-
       pList.addEventListener("dragend", (e) => {
           cleanupDragStyles();
       });
@@ -1783,24 +1247,8 @@
         if (act==="del-s5") removeS5Team(id);
       });
 
-      // Eventos do Chat 1-para-1
-      $("#chat-send").addEventListener("click", sendChatMessage);
-      $("#chat-input").addEventListener("keypress", (e) => {
-          if (e.key === "Enter" && !e.shiftKey) { 
-              e.preventDefault();
-              sendChatMessage();
-          }
-      });
+      // REMOVIDO: Eventos de Chat
       
-      $("#chat-box").addEventListener("click", (e) => {
-          const btn = e.target.closest("button[data-act]");
-          if (!btn) return;
-          const act = btn.dataset.act;
-          const id = btn.dataset.id;
-          if (act === "del-chat") deleteChatMessage(id);
-          if (act === "edit-chat") openEditChatMessageModal(id);
-      });
-
       $("#btn-save-settings").addEventListener("click", saveSettings);
 
       $("#ddm-header").addEventListener("click", ()=> {
@@ -1836,13 +1284,10 @@
       $("#logout-btn").addEventListener("click", logout);
     }
 
-    /* ========================== Boot ========================== */
+    /* ========================== Boot (Chat Removido) ========================== */
     function boot(){
       if (tryAutoLogin()) {
-        const userRef = ref(db, `users/${state.session.user}`);
-        set(userRef, { lastSeen: new Date().toISOString() });
-        onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
-        listenForGlobalMessages();
+        // REMOVIDO: 'set' e 'onDisconnect' do user
       } else {
         showLogin(true);
       }
