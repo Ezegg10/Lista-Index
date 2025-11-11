@@ -110,6 +110,14 @@
       animation: pulse-red 1.5s infinite; 
       border-color: #ef4444;
     }
+
+    /* *** NOVO: Estilo do Toggle Switch *** */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #2563eb; }
+    input:checked + .slider:before { transform: translateX(22px); }
   </style>
 
 </head>
@@ -185,12 +193,24 @@
 
       <section class="space-y-6">
         <div id="tab-saidas" class="card">
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h2 class="text-xl font-bold">Painel de Controle</h2>
               <p class="text-sm opacity-70">Horário de Brasília</p>
             </div>
-            <div id="alarm-pill" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 cursor-pointer transition-colors" title="Clique para ligar/desligar o alarme sonoro">ALARME: LIGADO</div>
+            <!-- *** NOVOS CONTROLES (ROBÔ E ALARME) *** -->
+            <div class="flex items-center gap-4">
+              <!-- NOVO: Botão Robô -->
+              <div class="flex items-center gap-2" title="Liga/Desliga a liberação automática do próximo aluno">
+                <span class="text-sm font-bold">Robô:</span>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-robo">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <!-- Botão Alarme -->
+              <div id="alarm-pill" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 cursor-pointer transition-colors" title="Clique para ligar/desligar o alarme sonoro">ALARME: LIGADO</div>
+            </div>
           </div>
 
           <div class="mt-6">
@@ -266,7 +286,7 @@
        title="Abrir Formulário de Feedback">
       <!-- Ícone de "Formulário" (Clipboard List) -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002 2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
       </svg>
     </a>
   </div>
@@ -307,7 +327,8 @@
       settings: {
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
-        defaultReason: "Banheiro"
+        defaultReason: "Banheiro",
+        isRoboActive: false // *** NOVO: Estado do Robô ***
       },
       requests: [], 
       s5Teams: [],
@@ -327,7 +348,7 @@
     /* ========================== Utils ========================== */
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => [...document.querySelectorAll(sel)];
-    // ... (todas as outras funções utilitárias: fmtDur, cleanName, formatDateTimeLocal, parseDateTimeLocal, toast)
+    
     const fmtDur = (ms)=>{
       if (isNaN(ms) || ms < 0) return "0m 0s";
       const s = Math.floor(ms/1000);
@@ -429,11 +450,8 @@
       });
     }
 
-    /* ========================== Login / Logout (CORRIGIDO) ========================== */
+    /* ========================== Login / Logout ========================== */
     
-    // REMOVIDO: tryAutoLogin() e const USERS
-    
-    // Função de Logout agora usa Firebase Auth
     async function logout(){
       try {
         await signOut(auth); // O onAuthStateChanged vai tratar do redirecionamento
@@ -444,10 +462,72 @@
     }
     
     /* ========================== Data bindings ========================== */
+    
+    // *** NOVA FUNÇÃO: O ROBÔ AUTOMÁTICO ***
+    async function processAutoArrival(currentQueue) {
+      // 1. Verifica se o robô está ligado
+      if (!state.settings.isRoboActive) return;
+
+      // 2. Encontra o aluno que clicou em "Cheguei" (chegadaPendente: true)
+      const arrivingStudent = currentQueue.find(r => r.chegadaPendente === true && r.status === 'approved');
+      
+      // 3. Se não há ninguém, pára
+      if (!arrivingStudent) return; 
+
+      console.log(`ROBÔ: Processando chegada de ${arrivingStudent.userName}`);
+
+      // 4. Prepara a atualização para mover este aluno para o histórico
+      const updates = {};
+      const historicoEntry = {
+        ...arrivingStudent,
+        status: "completed",
+        // 'returnTime' já foi definido pelo aluno quando clicou
+        chegadaPendente: null // Limpa o "aviso"
+      };
+      // Remove da fila ativa e adiciona ao histórico
+      updates[`historicoSaidas/${arrivingStudent.id}`] = historicoEntry;
+      updates[`saidas/${arrivingStudent.id}`] = null;
+
+      // 5. Encontra o *próximo* aluno na fila de espera (pending)
+      const sortedPending = currentQueue
+        .filter(r => r.status === 'pending' && r.id !== arrivingStudent.id) // Garante que não é o mesmo
+        .sort((a, b) => (a.order || 0) - (b.order || 0)); // Ordena
+      
+      const nextStudent = sortedPending[0];
+
+      if (nextStudent) {
+        console.log(`ROBÔ: Liberando automaticamente ${nextStudent.userName}`);
+        // 6. Prepara a atualização para aprovar (liberar) o próximo aluno
+        updates[`saidas/${nextStudent.id}`] = {
+          ...nextStudent, // Mantém os dados existentes
+          status: "approved",
+          departureTime: new Date().toISOString(),
+          reason: state.settings.defaultReason || "Banheiro"
+        };
+      } else {
+        console.log("ROBÔ: Fila de espera vazia.");
+      }
+
+      // 7. Executa a transação (mover um, aprovar outro)
+      try {
+        await update(ref(db), updates);
+        toast(`Robô: ${arrivingStudent.userName} chegou. ${nextStudent ? nextStudent.userName + ' liberado.' : ''}`, "ok");
+      } catch (e) {
+        console.error("Erro no robô automático:", e);
+        toast("Erro no robô automático.", "error");
+      }
+    }
+
+
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
-        if (s) state.settings = {...state.settings, ...s};
+        if (s) {
+          state.settings = {...state.settings, ...s};
+          // *** NOVO: Atualiza o estado do robô e o botão ***
+          state.settings.isRoboActive = !!s.isRoboActive; 
+          $("#toggle-robo").checked = state.settings.isRoboActive;
+        }
         $("#al1").value = state.settings.alertLevels[0];
         $("#al2").value = state.settings.alertLevels[1];
         $("#al3").value = state.settings.alertLevels[2];
@@ -455,18 +535,35 @@
         $("#alP").value = state.settings.persistentAlarmMinutes;
         $("#def-reason").value = state.settings.defaultReason || "";
       });
+      
+      // *** MODIFICADO: O ouvinte da fila agora chama o ROBÔ ***
       onValue(ref(db, "saidas"), (snap)=>{
         const data = snap.val() || {};
-        filaAtivaState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        const allDataList = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        
+        // *** NOVO: Processa chegadas automáticas ANTES de renderizar ***
+        processAutoArrival(allDataList); 
+        
+        // Se o robô estiver LIGADO, ele esconde os 'chegadaPendente' (pois estão sendo processados)
+        // Se estiver DESLIGADO, ele MOSTRA (para o admin confirmar manualmente)
+        if (state.settings.isRoboActive) {
+          filaAtivaState = allDataList.filter(r => r.status !== 'completed' && !r.chegadaPendente);
+        } else {
+          // Mostra 'chegadaPendente' para o Admin aprovar manualmente
+          filaAtivaState = allDataList.filter(r => r.status !== 'completed'); 
+        }
+
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
+      
       onValue(ref(db, "historicoSaidas"), (snap)=>{
         const data = snap.val() || {};
         historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
+      
       onValue(ref(db, "s5Teams"), (snap)=>{
         const data = snap.val() || {};
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
@@ -475,22 +572,30 @@
     }
 
     /* ========================== Render Saídas ========================== */
-    // ... (função renderSaidas() completa, sem alterações)
     function renderSaidas(){
-      const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
+      // Filtra a fila ativa (não inclui histórico)
+      const pendingAll = filaAtivaState.filter(r => r.status==="pending" || r.status==="approved");
+      
       pendingAll.sort((a, b) => {
           const orderA = a.order !== undefined ? a.order : new Date(a.requestTime).getTime();
           const orderB = b.order !== undefined ? b.order : new Date(a.requestTime).getTime();
           return orderA - orderB;
       });
-      const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
+      
+      // Filtra o histórico
+      const history = historicoState;
+      
       $("#pending-count").textContent = pendingAll.length.toString();
+      
       const pList = $("#pending-list");
       pList.innerHTML = "";
+      
       if(pendingAll.length===0){
         pList.innerHTML = `<li class="text-sm opacity-70 italic">Ninguém na fila agora.</li>`;
       }
+      
       const now = Date.now();
+      
       pendingAll.forEach(req => {
         const isApproved = req.status === "approved";
         const li = document.createElement("li");
@@ -498,30 +603,54 @@
         li.dataset.liId = req.id;
         li.draggable = true;
         li.dataset.dragId = req.id;
+        
         const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
         const left = document.createElement("div");
         const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
+        
         left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
                           <div class="text-xs mt-0.5">` +
                           (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
                                       : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
                         + `</div>`;
+        
         const right = document.createElement("div");
         right.className = "flex items-center gap-2";
+        
+        // *** MODIFICAÇÃO: Botões da Fila Ativa ***
         if (!isApproved){
+          // (Pendente) - Botão Excluir removido
           right.innerHTML = `<button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
-                             <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>`;
+                             <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>
+                             <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
         } else {
-          right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>`;
+          // (Aprovado / Fora da sala)
+          if (req.chegadaPendente) {
+            // Aluno clicou em "Cheguei", robô está desligado
+            // Botão Excluir removido
+            right.innerHTML = `<button class="btn-primary" data-act="return" data-id="${req.id}">Confirmar Chegada</button>
+                               <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
+            // Adiciona um destaque visual
+            li.classList.add("animate-pulse");
+            li.style.borderColor = "#2563eb"; // Borda azul
+            li.style.borderWidth = "2px";
+          } else {
+            // Aluno está fora, não clicou
+            // Botão Excluir removido
+            right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>
+                               <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
+          }
         }
-        right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
-                            <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
+        
         li.append(left, right);
         pList.appendChild(li);
       });
+      
+      // Renderização do Histórico (sem mudanças, exceto a fonte dos dados)
       const histBox = $("#history");
       histBox.innerHTML = "";
       const query = ($("#hist-search").value||"").toLowerCase();
+      
       const byDay = {};
       history.forEach(r=>{
         if (query && !r.userName.toLowerCase().includes(query)) return;
@@ -529,14 +658,17 @@
         const key = d.toLocaleDateString("pt-BR");
         (byDay[key] ||= []).push(r);
       });
+      
       const days = Object.keys(byDay).sort((a,b)=>{
         const da = new Date(a.split("/").reverse().join("-"));
         const db = new Date(b.split("/").reverse().join("-"));
         return db-da;
       });
+      
       if (days.length===0){
         histBox.innerHTML = `<div class="text-sm opacity-70 italic">Histórico vazio.</div>`;
       }
+      
       days.forEach(day=>{
         const hdr = document.createElement("div");
         hdr.className = "rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 px-3 py-2 font-extrabold flex items-center justify-between cursor-pointer";
@@ -544,6 +676,7 @@
         hdr.dataset.day = day; 
         const caret = document.createElement("span"); caret.textContent = "▼"; caret.className = "transition-transform"; hdr.append(caret);
         const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2 hidden";
+        
         byDay[day].sort((a,b)=>(new Date(b.requestTime||b.departureTime))-(new Date(a.requestTime||a.departureTime))).forEach(r=>{
           const li = document.createElement("li");
           li.className = "flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/40 py-1";
@@ -553,6 +686,8 @@
           const status = r.status==="completed" ? "Liberado" : (r.status === "rejected" ? "Recusado" : "Pendente");
           const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
           const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
+          
+          // *** MODIFICAÇÃO: Botões do Histórico (Manter Editar e Excluir) ***
           li.innerHTML = `<div class="min-w-0 truncate">
                             <b>${r.userName}</b> — <span class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</span>
                             <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
@@ -569,7 +704,6 @@
     }
 
     /* ========================== Render S5 ========================== */
-    // ... (função renderS5() completa, sem alterações)
     function renderS5(){
       const ul = $("#s5-list");
       ul.innerHTML = "";
@@ -606,12 +740,7 @@
     }
 
     /* ========================== Actions (Saídas) ========================== */
-    // ... (todas as funções de Ações de Saída, S5, Settings, Backup, Clock permanecem as mesmas)
-    // (addStudent, updateQueueOrder, approve, reject, arrived, removeReq, openEditSaidaModal, saveSaida)
-    // (addS5Team, removeS5Team, openEditS5Modal, saveS5Team)
-    // (saveSettings, downloadBackup, uploadBackup, resetAll, startClock)
     
-    // (Funções de Saídas - idênticas à versão anterior)
     function addStudent(){
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
@@ -626,6 +755,7 @@
         toast(`"${name}" adicionado à fila.`, "ok");
       });
     }
+    
     function updateQueueOrder() {
         const updates = {};
         const items = $$("#pending-list li[data-drag-id]");
@@ -642,6 +772,7 @@
             });
         }
     }
+    
     function approve(id){
       update(ref(db, "saidas/"+id), {
         status: "approved",
@@ -649,6 +780,7 @@
         reason: state.settings.defaultReason || "Banheiro"
       });
     }
+    
     async function reject(id) {
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
@@ -668,23 +800,32 @@
         toast("Erro ao mover pedido.", "error");
       }
     }
+    
     async function arrived(id) {
+      // Esta função agora é o "Chegou" MANUAL (ou confirmação manual)
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
+      
       const historicoEntry = {
         ...req,
         status: "completed",
-        returnTime: new Date().toISOString()
+        // Se o aluno clicou, usa o returnTime dele. Senão, usa o agora.
+        returnTime: req.returnTime || new Date().toISOString(),
+        chegadaPendente: null // Limpa o aviso
       };
+      
       const updates = {};
       updates[`historicoSaidas/${id}`] = historicoEntry;
       updates[`saidas/${id}`] = null;
+      
       try {
         await update(ref(db), updates);
         toast("Aluno movido para o histórico.", "ok");
       } catch (e) {
         toast("Erro ao mover aluno.", "error");
       }
+      
+      // Limpa caches de alarme
       if (state.alarmingStudents.has(id)) {
         state.alarmingStudents.delete(id);
       }
@@ -692,71 +833,109 @@
         delete state.alarmLevelsCache[id];
       }
     }
+    
     async function removeReq(id){
       const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída PERMANENTEMENTE?");
       if (!ok) return;
-      const req = state.requests.find(r => r.id === id);
-      let path = `saidas/${id}`; 
-      if (req && (req.status === 'completed' || req.status === 'rejected')) {
+      
+      // Procura em AMBOS os estados
+      const reqFila = filaAtivaState.find(r => r.id === id);
+      const reqHist = historicoState.find(r => r.id === id);
+      
+      let path = null;
+      if (reqFila) {
+        path = `saidas/${id}`;
+      } else if (reqHist) {
         path = `historicoSaidas/${id}`;
       }
+
+      if (!path) return toast("Erro: Registro não encontrado para exclusão.", "error");
+
       remove(ref(db, path)).then(() => {
         toast("Registro excluído.", "ok");
       }).catch(err => {
         toast("Erro ao excluir.", "error");
       });
     }
+
+    // *** MODIFICADO: Função de Editar (agora busca em ambos os estados) ***
+    async function openEditSaidaModal(id) {
+      const req = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
+      if (!req) return toast("Registro não encontrado.", "error");
+
+      state.editingItemId = id;
+      const content = `
+        <div class="field"><label>Nome</label><input id="edit-saida-name" class="input" value="${req.userName}"></div>
+        <div class="field"><label>Motivo</label><input id="edit-saida-reason" class="input" value="${req.reason || ''}"></div>
+        <div class="field"><label>Status</label>
+          <select id="edit-saida-status" class="input">
+            <option value="pending" ${req.status === 'pending' ? 'selected' : ''}>Pendente</option>
+            <option value="approved" ${req.status === 'approved' ? 'selected' : ''}>Aprovado</option>
+            <option value="completed" ${req.status === 'completed' ? 'selected' : ''}>Concluído</option>
+            <option value="rejected" ${req.status === 'rejected' ? 'selected' : ''}>Rejeitado</option>
+          </select>
+        </div>
+        <div class="field"><label>1. Pedido</label><input id="edit-request-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.requestTime)}"></div>
+        <div class="field"><label>2. Saída</label><input id="edit-departure-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.departureTime)}"></div>
+        <div class="field"><label>3. Retorno</label><input id="edit-return-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.returnTime)}"></div>
+      `;
+      openModal("Editar Registro de Saída", content, () => saveSaida(id));
+    }
+
     async function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
       const reason = ($("#edit-saida-reason").value || "").trim();
+      const newStatus = $("#edit-saida-status").value;
       const requestTime = parseDateTimeLocal($("#edit-request-time").value);
       const departureTime = parseDateTimeLocal($("#edit-departure-time").value);
       const returnTime = parseDateTimeLocal($("#edit-return-time").value);
+      
       if (!name) return toast("O nome não pode ficar em branco.", "error");
+      
       const updatesPayload = {
         userName: name,
         reason: reason || (state.settings.defaultReason || "Banheiro"),
-        requestTime: requestTime,
-        departureTime: departureTime,
-        returnTime: returnTime,
+        status: newStatus,
+        requestTime: requestTime || null,
+        departureTime: departureTime || null,
+        returnTime: returnTime || null,
+        chegadaPendente: null // Limpa o flag ao editar manualmente
       };
-      if (!requestTime) updatesPayload.requestTime = null;
-      if (!departureTime) updatesPayload.departureTime = null;
-      if (!returnTime) updatesPayload.returnTime = null;
-      const currentReq = state.requests.find(r => r.id === id);
+
+      // Encontra o registro original (em qualquer lista)
+      const currentReq = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
       if (!currentReq) return toast("Erro: Registro original não encontrado.", "error");
-      if (updatesPayload.returnTime) {
-          updatesPayload.status = "completed";
-      } else if (updatesPayload.departureTime) {
-          updatesPayload.status = "approved";
-      } else {
-          updatesPayload.status = "pending";
-      }
-      if (currentReq.status === 'rejected' && !updatesPayload.departureTime && !updatesPayload.returnTime) {
-          updatesPayload.status = "rejected";
-      }
+      
       const wasInHistory = currentReq.status === 'completed' || currentReq.status === 'rejected';
-      const newStatus = updatesPayload.status;
       const willBeInHistory = newStatus === 'completed' || newStatus === 'rejected';
+
       const updates = {};
-      const finalPayload = {...currentReq, ...updatesPayload};
+      const finalPayload = {...currentReq, ...updatesPayload}; // Junta o original com as mudanças
+      
+      // Lógica de Mover entre Fila e Histórico
       if (wasInHistory && !willBeInHistory) {
+          // Estava no histórico, vai para a fila
           updates[`historicoSaidas/${id}`] = null;
           updates[`saidas/${id}`] = finalPayload; 
       } else if (!wasInHistory && willBeInHistory) {
+          // Estava na fila, vai para o histórico
           updates[`saidas/${id}`] = null;
           updates[`historicoSaidas/${id}`] = finalPayload;
       } else if (wasInHistory) {
+          // Estava e continua no histórico
           updates[`historicoSaidas/${id}`] = finalPayload;
       } else {
+          // Estava e continua na fila
           updates[`saidas/${id}`] = finalPayload;
       }
+      
       try {
         await update(ref(db), updates);
         toast("Registro atualizado!", "ok");
         closeModal();
       } catch (e) {
         toast("Erro ao atualizar.", "error");
+        console.error("Erro ao salvar saida:", e);
       }
     }
     
@@ -817,17 +996,22 @@
         closeModal();
       });
     }
+    
+    // *** MODIFICADO: Salva o estado do Robô também ***
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
       const pers = parseInt($("#alP").value,10);
       if (vals.some(v=>!v||v<=0) || !pers || pers<=0){ return toast("Valores inválidos.", "error"); }
       for (let i=0;i<vals.length-1;i++){ if (vals[i] >= vals[i+1]) return toast("Alertas devem ser crescentes.", "error"); }
       if (vals[vals.length-1] >= pers) return toast("Alarme contínuo deve ser maior que o 4º alerta.", "error");
+      
       const payload = {
         alertLevels: vals,
         persistentAlarmMinutes: pers,
-        defaultReason: $("#def-reason").value || "Banheiro"
+        defaultReason: $("#def-reason").value || "Banheiro",
+        isRoboActive: state.settings.isRoboActive // Garante que o estado do robô seja salvo
       };
+      
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
     
@@ -897,6 +1081,7 @@
         $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", { hour12: false });
         let shouldBeep = false;
         const { alertLevels, persistentAlarmMinutes } = state.settings;
+        
         filaAtivaState.forEach(r => {
           const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`);
           const currentVisualLevel = state.alarmLevelsCache[r.id] || 0;
@@ -966,7 +1151,9 @@
     function bindEvents() {
       document.body.addEventListener('click', initAudio, { once: true });
       document.body.addEventListener('input', initAudio, { once: true });
+      
       $("#btn-add").addEventListener("click", addStudent);
+      
       const pList = $("#pending-list");
       pList.addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-act]");
@@ -974,10 +1161,11 @@
         const act = btn.dataset.act, id = btn.dataset.id;
         if (act === "approve") approve(id);
         if (act === "reject") reject(id);
-        if (act === "return") arrived(id);
-        if (act === "del-saida") removeReq(id);
+        if (act === "return") arrived(id); // Este é o "Chegou" manual ou a confirmação
+        if (act === "del-saida") removeReq(id); // (Este botão não existe mais na fila)
         if (act === "edit-saida") openEditSaidaModal(id);
       });
+      
       // ... (Eventos de Drag-n-Drop - idênticos)
       let dragSrcId = null;
       function cleanupDragStyles() {
@@ -1042,14 +1230,14 @@
         cleanupDragStyles();
       });
       
-      // ... (Restante dos eventos - idênticos)
+      // *** MODIFICADO: Eventos do Histórico ***
       $("#history").addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-act]");
         if (btn) {
-          e.stopPropagation();
+          e.stopPropagation(); // Impede que o dia recolha ao clicar no botão
           const act = btn.dataset.act, id = btn.dataset.id;
-          if (act === "del-saida") removeReq(id);
-          if (act === "edit-saida") openEditSaidaModal(id);
+          if (act === "del-saida") removeReq(id); // Excluir funciona aqui
+          if (act === "edit-saida") openEditSaidaModal(id); // Editar funciona aqui
           return;
         }
         const hdr = e.target.closest("div[data-day]");
@@ -1060,6 +1248,7 @@
           if (caret) caret.classList.toggle("rotate-180");
         }
       });
+      
       $("#hist-search").addEventListener("input", renderSaidas);
       $("#s5-add").addEventListener("click", addS5Team);
       $("#s5-list").addEventListener("click", (e) => {
@@ -1078,6 +1267,15 @@
       $("#file-backup").addEventListener("change", (e) => e.target.files[0] && uploadBackup(e.target.files[0]));
       $("#btn-reset").addEventListener("click", resetAll);
       $$(".tab-btn").forEach(b => b.addEventListener("click", () => activateTab(b.dataset.tab)));
+      
+      // *** NOVO: Evento do Toggle do Robô ***
+      $("#toggle-robo").addEventListener("change", (e) => {
+        state.settings.isRoboActive = e.target.checked;
+        toast(`Robô ${state.settings.isRoboActive ? 'LIGADO' : 'DESLIGADO'}.`, "ok");
+        // Salva a configuração na nuvem
+        set(ref(db, "settings/isRoboActive"), state.settings.isRoboActive);
+      });
+
       $("#alarm-pill").addEventListener("click", () => {
         state.alarmOn = !state.alarmOn;
         const pill = $("#alarm-pill");
@@ -1094,19 +1292,15 @@
         }
       });
       
-      // O botão de login não existe mais nesta página
       $("#logout-btn").addEventListener("click", logout);
     }
 
     /* ========================== Boot (CORRIGIDO) ========================== */
     function boot(){
-      // Esta função agora SÓ regista o listener
       onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          // --- UTILIZADOR LOGADO ---
-          // A sessão é válida, carrega a app
           console.log("Sessão válida, a carregar app...");
-          state.session = true; // Define a sessão como ativa
+          state.session = true; 
           
           initAudio();
           bindEvents();
@@ -1114,16 +1308,14 @@
           startClock();
           activateTab("saidas");
           
-          // Mostra a app (que estava escondida)
           document.documentElement.style.opacity = "1";
           document.getElementById('app').classList.remove('opacity-0');
 
         } else {
-          // --- UTILIZADOR DESLOGADO ---
-          // Se não tiver sessão, volta para o login
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          window.location.href = "index.html"; // Redireciona para a página de login
+          // *** IMPORTANTE: Certifique-se que sua página de login chama-se 'login.html' ***
+          window.location.href = "login.html"; 
         }
       });
     }
