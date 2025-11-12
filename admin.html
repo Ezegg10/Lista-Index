@@ -932,8 +932,14 @@
       }
       
       const updates = {};
+      
+      // *** NOVO: Pega o estado atual do item para não sobrescrever ***
+      const req = filaAtivaState.find(r => r.id === id);
+      if (!req) return toast("Erro: Registro não encontrado.", "error");
+      
       // Atualiza o pedido
       updates[`saidas/${id}`] = {
+        ...req, // Mantém dados existentes (como 'order', 'userName', etc)
         status: "approved",
         departureTime: new Date().toISOString(),
         reason: state.settings.defaultReason || "Banheiro",
@@ -1456,10 +1462,7 @@
         // ... (código histórico)
         const btn = e.target.closest("button[data-act]");
         if (btn) {
-          e.stopPropagation();
-          const act = btn.dataset.act, id = btn.dataset.id;
-          if (act === "del-saida") removeReq(id);
-* e.stopPropagation();
+          e.stopPropagation(); // Impede que o dia recolha ao clicar no botão
           const act = btn.dataset.act, id = btn.dataset.id;
           if (act === "del-saida") removeReq(id);
           if (act === "edit-saida") openEditSaidaModal(id);
@@ -1543,8 +1546,8 @@
         } else {
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** CORREÇÃO DO BUG DE LOGIN ***
-          window.location.href = "./Login.html"; 
+          // *** CORREÇÃO DO BUG DE LOGIN (removido o './') ***
+          window.location.href = "Login.html"; 
         }
       });
     }
