@@ -3,8 +3,6 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- NOVO: Meta tag para impedir a tradução automática -->
-  <meta name="google" content="notranslate">
   <title>Lista de Saídas</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -121,48 +119,7 @@
     input:checked + .slider { background-color: #2563eb; }
     input:checked + .slider:before { transform: translateX(22px); }
 
-    /* *** MODIFICADO: Estilos para LIMPANDO *** */
-    .wc-card {
-      border-radius: 12px;
-      padding: 1rem;
-      text-align: center;
-      transition: all 0.2s;
-    }
-    .wc-card.livre {
-      background-color: #ecfdf5;
-      border: 2px solid #22c55e;
-      color: #064e3b;
-    }
-    /* MUDADO DE .ocupado PARA .limpando */
-    .wc-card.limpando {
-      background-color: #fef2f2;
-      border: 2px solid #ef4444;
-      color: #991b1b;
-    }
-    .dark .wc-card.livre {
-      background-color: #052e1a;
-      border: 2px solid #22c55e;
-      color: #d1fae5;
-    }
-    .dark .wc-card.limpando {
-      background-color: #450a0a;
-      border: 2px solid #ef4444;
-      color: #fecaca;
-    }
-    .wc-card h4 {
-      font-size: 0.9rem;
-      font-weight: 800;
-      opacity: 0.8;
-    }
-    .wc-card .status-text {
-      font-size: 1.5rem;
-      font-weight: 900;
-      margin: 0.25rem 0;
-    }
-    .wc-card button {
-      width: 100%;
-      margin-top: 0.75rem;
-    }
+    /* *** ESTILOS DE WC REMOVIDOS *** */
   </style>
 
 </head>
@@ -253,22 +210,7 @@
             </div>
           </div>
           
-          <!-- *** MODIFICADO: Painel de Limpeza de WCs *** -->
-          <div class="mt-6">
-            <h3 class="section-title">Status dos Banheiros (Limpeza)</h3>
-            <div class="grid grid-cols-2 gap-4 mt-2">
-              <div id="wc-1-card" class="wc-card livre">
-                <h4>Banheiro 1º Andar</h4>
-                <div class="status-text">LIVRE</div>
-                <button class="btn-secondary" data-wc="wc1">Marcar Limpando</button>
-              </div>
-              <div id="wc-2-card" class="wc-card livre">
-                <h4>Banheiro 2º Andar</h4>
-                <div class="status-text">LIVRE</div>
-                <button class="btn-secondary" data-wc="wc2">Marcar Limpando</button>
-              </div>
-            </div>
-          </div>
+          <!-- *** PAINEL DE WC REMOVIDO *** -->
 
           <div class="mt-6">
             <h3 class="section-title">Adicionar Aluno à Fila de Espera</h3>
@@ -385,14 +327,10 @@
       settings: {
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
-        defaultReason: "Banheiro",
+        defaultReason: "Saída Padrão", // Motivo alterado
         isRoboActive: false,
-        roboLimit: 2,
-        // *** MODIFICADO: Status de LIMPEZA ***
-        wcCleaningStatus: { 
-          wc1: "livre",
-          wc2: "livre"
-        }
+        roboLimit: 2, 
+        // wcStatus removido
       },
       requests: [], 
       s5Teams: [],
@@ -528,18 +466,18 @@
     
     /* ========================== Data bindings ========================== */
     
-    // *** MODIFICADO: Nova lógica do Robô (Limpando / Em Uso) ***
+    // *** O ROBÔ AUTOMÁTICO (SIMPLIFICADO) ***
     async function processAutoQueue() {
       if (state.isRoboProcessing || !state.settings.isRoboActive) return;
+      
       state.isRoboProcessing = true;
       
       const filaSnapshot = await get(ref(db, "saidas"));
       const currentQueue = Object.entries(filaSnapshot.val() || {}).map(([id, v]) => ({ id, ...v }));
 
       const updates = {};
-      let wcCleaningStatus = { ...state.settings.wcCleaningStatus }; // Status de limpeza
 
-      // --- 1. PROCESSAR CHEGADAS (Alunos que clicaram "Cheguei") ---
+      // --- 1. PROCESSAR CHEGADAS ---
       const arrivingStudents = currentQueue.filter(r => r.chegadaPendente === true && r.status === 'approved');
 
       for (const req of arrivingStudents) {
@@ -547,71 +485,54 @@
         const historicoEntry = {
           ...req,
           status: "completed",
-          chegadaPendente: null,
-          // O 'usedWc' foi definido pelo aluno ao clicar em "Cheguei"
+          chegadaPendente: null, 
         };
         updates[`historicoSaidas/${req.id}`] = historicoEntry;
         updates[`saidas/${req.id}`] = null;
         
-        // Se o aluno usou um WC que estava "Limpando", o admin deve liberar manualmente
-        // O robô só libera o WC se ele *não* estava "Limpando"
-        if (req.usedWc && wcCleaningStatus[req.usedWc] === 'livre') {
-           // O 'assignedWc' é limpo quando o aluno vai para o histórico
-           // Não precisamos mais dele
-        }
+        // Lógica de WC removida
       }
 
       // --- 2. PROCESSAR SAÍDAS (LIBERAÇÕES) ---
       
-      // Calcula alunos *atualmente fora* (já liberados)
       const studentsOut = currentQueue.filter(r => 
         r.status === 'approved' && !r.chegadaPendente
-      );
+      ).length;
       
-      // Calcula vagas de SAÍDA (limite geral)
-      let vagasAbertas = state.settings.roboLimit - studentsOut.length;
+      let vagasAbertas = state.settings.roboLimit - studentsOut;
       
       if (vagasAbertas > 0) {
+        // Lógica de WC removida
         
-        // Pega WCs que estão "livres" (não limpando)
-        const wcsLivresDeLimpeza = Object.keys(wcCleaningStatus).filter(key => wcCleaningStatus[key] === 'livre');
-        
-        // Pega WCs que já estão *em uso* por alunos
-        const wcsEmUso = new Set(studentsOut.map(s => s.assignedWc).filter(Boolean));
-        
-        // WCs realmente disponíveis: (Não estão limpando) E (Não estão em uso)
-        const wcsDisponiveis = wcsLivresDeLimpeza.filter(wc => !wcsEmUso.has(wc));
-        
-        if (wcsDisponiveis.length > 0) {
-          const pendingStudents = currentQueue
-            .filter(r => r.status === 'pending')
-            .sort((a, b) => (a.order || 0) - (b.order || 0));
+        const pendingStudents = currentQueue
+          .filter(r => r.status === 'pending')
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
 
-          let i = 0;
-          while (i < pendingStudents.length && vagasAbertas > 0 && wcsDisponiveis.length > 0) {
-            const nextStudent = pendingStudents[i];
-            const wcToAssign = wcsDisponiveis.shift(); // Pega o primeiro WC disponível
+        let i = 0;
+        // Libera alunos até o limite de vagas
+        while (i < pendingStudents.length && vagasAbertas > 0) {
+          const nextStudent = pendingStudents[i];
 
-            console.log(`ROBÔ: Liberando ${nextStudent.userName} para ${wcToAssign}`);
+          console.log(`ROBÔ: Liberando ${nextStudent.userName}`);
 
-            updates[`saidas/${nextStudent.id}`] = {
-              ...nextStudent,
-              status: "approved",
-              departureTime: new Date().toISOString(),
-              reason: state.settings.defaultReason || "Banheiro",
-              assignedWc: wcToAssign // Designa o WC
-            };
-            
-            // Não precisamos marcar o WC como "ocupado" aqui
-            // A lógica de "wcsEmUso" na próxima rodada cuidará disso
+          updates[`saidas/${nextStudent.id}`] = {
+            ...nextStudent,
+            status: "approved",
+            departureTime: new Date().toISOString(),
+            reason: state.settings.defaultReason || "Saída Padrão",
+            assignedWc: null // Removido
+          };
 
-            vagasAbertas--;
-            i++;
-          }
+          // Lógica de WC removida
+          vagasAbertas--;
+          i++;
         }
       }
 
       // --- 3. EXECUTAR ATUALIZAÇÕES ---
+      
+      // Lógica de WC removida
+
       if (Object.keys(updates).length > 0) {
         try {
           await update(ref(db), updates);
@@ -622,35 +543,10 @@
         }
       }
 
-      state.isRoboProcessing = false; // Libera a trava
+      state.isRoboProcessing = false;
     }
 
-    // *** MODIFICADO: Renderiza o status de LIMPEZA ***
-    function renderWcStatus() {
-      const wcStatus = state.settings.wcCleaningStatus;
-      
-      for (const wcId of ['wc1', 'wc2']) {
-        const card = $(`#wc-${wcId === 'wc1' ? '1' : '2'}-card`);
-        const statusText = card.querySelector('.status-text');
-        const button = card.querySelector('button');
-        
-        if (wcStatus[wcId] === 'livre') {
-          card.classList.remove('limpando');
-          card.classList.add('livre');
-          statusText.textContent = 'LIVRE';
-          button.textContent = 'Marcar Limpando';
-          button.classList.remove('btn-danger');
-          button.classList.add('btn-secondary');
-        } else {
-          card.classList.remove('livre');
-          card.classList.add('limpando');
-          statusText.textContent = 'LIMPANDO';
-          button.textContent = 'Marcar Livre';
-          button.classList.remove('btn-secondary');
-          button.classList.add('btn-danger');
-        }
-      }
-    }
+    // *** Função renderWcStatus REMOVIDA ***
 
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
@@ -659,14 +555,12 @@
           state.settings = {...state.settings, ...s};
           state.settings.isRoboActive = !!s.isRoboActive;
           state.settings.roboLimit = s.roboLimit || 2;
-          // *** MODIFICADO: Lê o status de LIMPEZA ***
-          state.settings.wcCleaningStatus = s.wcCleaningStatus || { wc1: 'livre', wc2: 'livre' };
+          // wcStatus removido
           
           $("#toggle-robo").checked = state.settings.isRoboActive;
           $("#robo-limit").value = state.settings.roboLimit;
-          renderWcStatus(); // Renderiza WCs
+          // renderWcStatus removido
         }
-        // Carrega o resto das configs
         $("#al1").value = state.settings.alertLevels[0];
         $("#al2").value = state.settings.alertLevels[1];
         $("#al3").value = state.settings.alertLevels[2];
@@ -679,7 +573,6 @@
         const data = snap.val() || {};
         const allDataList = Object.entries(data).map(([id, v])=> ({id, ...v}));
         
-        // Dispara o Robô
         if (state.settings.isRoboActive) {
           processAutoQueue(); 
         }
@@ -741,14 +634,13 @@
         
         const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
         const left = document.createElement("div");
-        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
+        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Saída Padrão") : "N/A");
         
-        // *** MODIFICADO: Mostra WC designado ***
-        const wcLabel = req.assignedWc === 'wc1' ? ' (WC 1)' : (req.assignedWc === 'wc2' ? ' (WC 2)' : '');
+        // wcLabel removido
         
         left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
                           <div class="text-xs mt-0.5">` +
-                          (isApproved ? `Motivo: ${reason}${wcLabel} | Decorrido: <span data-dur="${req.id}-out">${req.id}-out</span>`
+                          (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
                                       : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
                         + `</div>`;
         
@@ -761,10 +653,8 @@
                              <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
         } else {
           if (req.chegadaPendente) {
-            // *** MODIFICADO: Mostra WC que o aluno USOU ***
-            const usedWcLabel = req.usedWc === 'wc1' ? ' (WC 1)' : (req.usedWc === 'wc2' ? ' (WC 2)' : '');
-            
-            right.innerHTML = `<button class="btn-primary" data-act="return" data-id="${req.id}">Confirmar${usedWcLabel}</button>
+            // usedWcLabel removido
+            right.innerHTML = `<button class="btn-primary" data-act="return" data-id="${req.id}">Confirmar</button>
                                <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
             li.classList.add("animate-pulse");
             li.style.borderColor = "#2563eb";
@@ -817,15 +707,14 @@
           const t_ret = r.returnTime ? new Date(r.returnTime).toLocaleTimeString("pt-BR") : "";
           const status = r.status==="completed" ? "Liberado" : (r.status === "rejected" ? "Recusado" : "Pendente");
           const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
-          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
+          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Saída Padrão') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
           
-          // *** MODIFICADO: Mostra WC usado ou designado ***
-          const wcLabel = r.usedWc === 'wc1' ? ' (WC 1)' : (r.usedWc === 'wc2' ? ' (WC 2)' : (r.assignedWc === 'wc1' ? ' (WC 1)' : (r.assignedWc === 'wc2' ? ' (WC 2)' : '')));
+          // wcLabel removido
           
           li.innerHTML = `<div class="min-w-0 truncate">
                             <b>${r.userName}</b> — <span class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</span>
                             <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
-                            <br><span class="text-xs opacity-80">Motivo: ${reason}${wcLabel}</span>
+                            <br><span class="text-xs opacity-80">Motivo: ${reason}</span>
                           </div>
                           <div class="flex gap-1">
                             <button class="btn-icon" data-act="edit-saida" data-id="${r.id}">✏️</button>
@@ -880,16 +769,7 @@
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
       
-      // *** MODIFICADO: Verifica WCs disponíveis ***
-      const wcsLivresDeLimpeza = Object.keys(state.settings.wcCleaningStatus).filter(key => state.settings.wcCleaningStatus[key] === 'livre');
-      const studentsOut = filaAtivaState.filter(r => r.status === 'approved' && !r.chegadaPendente);
-      const wcsEmUso = new Set(studentsOut.map(s => s.assignedWc).filter(Boolean));
-      const wcsDisponiveis = wcsLivresDeLimpeza.filter(wc => !wcsEmUso.has(wc));
-      
-      if (wcsDisponiveis.length === 0) {
-        toast("Todos os WCs estão em limpeza ou em uso. Aguarde.", "error");
-        return;
-      }
+      // Verificação de WC removida
       
       const payload = {
         userName: name,
@@ -921,36 +801,23 @@
         }
     }
     
-    // *** MODIFICADO: Aprovar Manual (Lógica de Limpeza / Em Uso) ***
+    // *** MODIFICADO: Aprovar Manual (sem WC) ***
     function approve(id){
-      // Encontra WCs disponíveis
-      const wcCleaningStatus = state.settings.wcCleaningStatus;
-      const wcsLivresDeLimpeza = Object.keys(wcCleaningStatus).filter(key => wcCleaningStatus[key] === 'livre');
-      
-      const studentsOut = filaAtivaState.filter(r => r.status === 'approved' && !r.chegadaPendente);
-      const wcsEmUso = new Set(studentsOut.map(s => s.assignedWc).filter(Boolean));
-      
-      const wcsDisponiveis = wcsLivresDeLimpeza.filter(wc => !wcsEmUso.has(wc));
-
-      if (wcsDisponiveis.length === 0) {
-        toast("Não é possível liberar. Todos os WCs estão em limpeza ou em uso.", "error");
-        return;
-      }
-      
-      const wcToAssign = wcsDisponiveis[0]; // Pega o primeiro disponível
+      // Lógica de WC removida
       
       const updates = {};
+      
       const req = filaAtivaState.find(r => r.id === id);
       if (!req) return toast("Erro: Registro não encontrado.", "error");
       
       updates[`saidas/${id}`] = {
-        ...req, 
+        ...req,
         status: "approved",
         departureTime: new Date().toISOString(),
-        reason: state.settings.defaultReason || "Banheiro",
-        assignedWc: wcToAssign
+        reason: state.settings.defaultReason || "Saída Padrão",
+        assignedWc: null // Removido
       };
-      // Não precisamos mais salvar o status do WC aqui
+      // Lógica de WC removida
 
       update(ref(db), updates).catch(err => {
         toast("Erro ao aprovar.", "error");
@@ -977,7 +844,7 @@
       }
     }
     
-    // *** MODIFICADO: "Chegou" manual (Admin) ***
+    // *** MODIFICADO: "Chegou" manual (sem WC) ***
     async function arrived(id) {
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
@@ -987,16 +854,14 @@
         status: "completed",
         returnTime: req.returnTime || new Date().toISOString(),
         chegadaPendente: null
-        // 'usedWc' (se existir) ou 'assignedWc' são mantidos
       };
       
       const updates = {};
       updates[`historicoSaidas/${id}`] = historicoEntry;
       updates[`saidas/${id}`] = null;
       
-      // O Robô/Admin não libera mais o WC, ele só fica disponível
-      // quando não está mais em 'assignedWc' na fila
-      
+      // Lógica de WC removida
+
       try {
         await update(ref(db), updates);
         toast("Aluno movido para o histórico.", "ok");
@@ -1051,20 +916,7 @@
             <option value="rejected" ${req.status === 'rejected' ? 'selected' : ''}>Rejeitado</option>
           </select>
         </div>
-        <div class="field"><label>WC Designado</label>
-           <select id="edit-wc-assigned" class="input">
-            <option value="" ${!req.assignedWc ? 'selected' : ''}>Nenhum</option>
-            <option value="wc1" ${req.assignedWc === 'wc1' ? 'selected' : ''}>WC 1º Andar</option>
-            <option value="wc2" ${req.assignedWc === 'wc2' ? 'selected' : ''}>WC 2º Andar</option>
-          </select>
-        </div>
-         <div class="field"><label>WC Usado (Aluno)</label>
-           <select id="edit-wc-used" class="input">
-            <option value="" ${!req.usedWc ? 'selected' : ''}>Nenhum</option>
-            <option value="wc1" ${req.usedWc === 'wc1' ? 'selected' : ''}>WC 1º Andar</option>
-            <option value="wc2" ${req.usedWc === 'wc2' ? 'selected' : ''}>WC 2º Andar</option>
-          </select>
-        </div>
+        <!-- Campos de WC Removidos -->
         <div class="field"><label>1. Pedido</label><input id="edit-request-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.requestTime)}"></div>
         <div class="field"><label>2. Saída</label><input id="edit-departure-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.departureTime)}"></div>
         <div class="field"><label>3. Retorno</label><input id="edit-return-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.returnTime)}"></div>
@@ -1079,21 +931,20 @@
       const requestTime = parseDateTimeLocal($("#edit-request-time").value);
       const departureTime = parseDateTimeLocal($("#edit-departure-time").value);
       const returnTime = parseDateTimeLocal($("#edit-return-time").value);
-      const assignedWc = $("#edit-wc-assigned").value || null;
-      const usedWc = $("#edit-wc-used").value || null;
+      // Campos de WC removidos
       
       if (!name) return toast("O nome não pode ficar em branco.", "error");
       
       const updatesPayload = {
         userName: name,
-        reason: reason || (state.settings.defaultReason || "Banheiro"),
+        reason: reason || (state.settings.defaultReason || "Saída Padrão"),
         status: newStatus,
         requestTime: requestTime || null,
         departureTime: departureTime || null,
         returnTime: returnTime || null,
         chegadaPendente: null,
-        assignedWc: assignedWc,
-        usedWc: usedWc
+        assignedWc: null, // Removido
+        usedWc: null // Removido
       };
 
       const currentReq = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
@@ -1189,6 +1040,7 @@
       });
     }
     
+    // *** MODIFICADO: Salva o limite do Robô (sem WC) ***
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
       const pers = parseInt($("#alP").value,10);
@@ -1203,11 +1055,10 @@
       const payload = {
         alertLevels: vals,
         persistentAlarmMinutes: pers,
-        defaultReason: $("#def-reason").value || "Banheiro",
+        defaultReason: $("#def-reason").value || "Saída Padrão",
         isRoboActive: state.settings.isRoboActive,
         roboLimit: roboLimit,
-        // *** MODIFICADO: Salva o status de LIMPEZA ***
-        wcCleaningStatus: state.settings.wcCleaningStatus
+        // wcStatus removido
       };
       
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
@@ -1350,24 +1201,7 @@
       if ($tab) $tab.classList.remove("hidden");
     }
 
-    // *** MODIFICADO: Função de clique para os botões de LIMPEZA ***
-    function toggleWcStatus(wcId) {
-      const currentStatus = state.settings.wcCleaningStatus[wcId];
-      const newStatus = currentStatus === 'livre' ? 'limpando' : 'livre';
-      
-      // Atualiza a UI primeiro
-      state.settings.wcCleaningStatus[wcId] = newStatus;
-      renderWcStatus();
-      toast(`WC ${wcId === 'wc1' ? '1' : '2'} marcado como ${newStatus}.`, "ok");
-
-      // Envia para o DB
-      set(ref(db, `settings/wcCleaningStatus/${wcId}`), newStatus).catch(() => {
-        toast("Erro ao salvar status do WC na nuvem.", "error");
-        // Reverte se falhar
-        state.settings.wcCleaningStatus[wcId] = currentStatus;
-        renderWcStatus();
-      });
-    }
+    // *** Função toggleWcStatus REMOVIDA ***
 
     function bindEvents() {
       document.body.addEventListener('click', initAudio, { once: true });
@@ -1375,9 +1209,7 @@
       
       $("#btn-add").addEventListener("click", addStudent);
       
-      // *** MODIFICADO: Eventos dos botões de LIMPEZA ***
-      $("#wc-1-card button").addEventListener("click", () => toggleWcStatus('wc1'));
-      $("#wc-2-card button").addEventListener("click", () => toggleWcStatus('wc2'));
+      // *** Eventos de WC REMOVIDOS ***
 
       const pList = $("#pending-list");
       pList.addEventListener("click", (e) => {
@@ -1462,7 +1294,7 @@
         // ... (código histórico)
         const btn = e.target.closest("button[data-act]");
         if (btn) {
-          e.stopPropagation(); // Impede que o dia recolha ao clicar no botão
+          e.stopPropagation();
           const act = btn.dataset.act, id = btn.dataset.id;
           if (act === "del-saida") removeReq(id);
           if (act === "edit-saida") openEditSaidaModal(id);
@@ -1545,8 +1377,8 @@
         } else {
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** CORREÇÃO: Aponta para login.html (minúsculo) ***
-          window.location.href = "./login.html"; 
+          // *** CORREÇÃO: "admin.html" (minúsculo) para "Login.html" (maiúsculo) ***
+          window.location.href = window.location.href.replace("admin.html", "Login.html"); 
         }
       });
     }
