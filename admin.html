@@ -263,8 +263,13 @@
             <div class="field">
               <label>4º Alerta (min)</label><input id="al4" type="number" class="input" min="1">
             </div>
-            <div class="field sm:col-span-2">
+            <div class="field">
               <label>Alarme Contínuo (min)</label><input id="alP" type="number" class="input" min="1">
+            </div>
+            <!-- *** NOVO CAMPO: Limite de Saídas *** -->
+            <div class="field">
+              <label>Limite de Saídas (Robô)</label>
+              <input id="max-auto" type="number" class="input" min="1" max="5" value="2">
             </div>
             <div class="field sm:col-span-2">
               <label>Motivo Padrão</label><input id="def-reason" class="input">
@@ -328,7 +333,8 @@
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
         defaultReason: "Banheiro",
-        isRoboActive: false // *** NOVO: Estado do Robô ***
+        isRoboActive: false, // *** NOVO: Estado do Robô ***
+        maxAutoApproved: 2 // *** NOVO: Limite de Saídas ***
       },
       requests: [], 
       s5Teams: [],
@@ -463,70 +469,82 @@
     
     /* ========================== Data bindings ========================== */
     
-    // *** NOVA FUNÇÃO: O ROBÔ AUTOMÁTICO ***
-    async function processAutoArrival(currentQueue) {
-      // 1. Verifica se o robô está ligado
-      if (!state.settings.isRoboActive) return;
+    // *** LÓGICA DO ROBÔ ATUALIZADA (com limite) ***
+    async function roboProcessQueue(allDataList) {
+        if (!state.settings.isRoboActive) return false; // Pára se o robô estiver desligado
 
-      // 2. Encontra o aluno que clicou em "Cheguei" (chegadaPendente: true)
-      const arrivingStudent = currentQueue.find(r => r.chegadaPendente === true && r.status === 'approved');
-      
-      // 3. Se não há ninguém, pára
-      if (!arrivingStudent) return; 
+        const updates = {};
+        let actionTaken = false; // Controla se o robô fez alguma alteração
 
-      console.log(`ROBÔ: Processando chegada de ${arrivingStudent.userName}`);
+        // 1. Encontra alunos que clicaram em "Cheguei"
+        const arrivingStudents = allDataList.filter(r => r.chegadaPendente === true && r.status === 'approved');
+        
+        // 2. Encontra alunos que já estão fora (e não estão chegando)
+        const approvedStudents = allDataList.filter(r => r.status === 'approved' && !r.chegadaPendente);
+        
+        // 3. Encontra alunos na fila de espera
+        const pendingStudents = allDataList
+            .filter(r => r.status === 'pending')
+            .sort((a, b) => (a.order || 0) - (b.order || 0)); // Ordena
+            
+        // 4. Calcula quantos podem sair
+        const maxAutoApproved = state.settings.maxAutoApproved || 2;
+        let slotsAvailable = maxAutoApproved - approvedStudents.length;
 
-      // 4. Prepara a atualização para mover este aluno para o histórico
-      const updates = {};
-      const historicoEntry = {
-        ...arrivingStudent,
-        status: "completed",
-        // 'returnTime' já foi definido pelo aluno quando clicou
-        chegadaPendente: null // Limpa o "aviso"
-      };
-      // Remove da fila ativa e adiciona ao histórico
-      updates[`historicoSaidas/${arrivingStudent.id}`] = historicoEntry;
-      updates[`saidas/${arrivingStudent.id}`] = null;
+        // 5. Processa os alunos que estão chegando
+        for (const student of arrivingStudents) {
+            console.log(`ROBÔ: Processando chegada de ${student.userName}`);
+            const historicoEntry = {
+                ...student,
+                status: "completed",
+                chegadaPendente: null // Limpa o "aviso"
+                // 'returnTime' já foi definido pelo aluno
+            };
+            updates[`historicoSaidas/${student.id}`] = historicoEntry;
+            updates[`saidas/${student.id}`] = null;
+            slotsAvailable++; // Libera um slot
+            actionTaken = true;
+        }
 
-      // 5. Encontra o *próximo* aluno na fila de espera (pending)
-      const sortedPending = currentQueue
-        .filter(r => r.status === 'pending' && r.id !== arrivingStudent.id) // Garante que não é o mesmo
-        .sort((a, b) => (a.order || 0) - (b.order || 0)); // Ordena
-      
-      const nextStudent = sortedPending[0];
-
-      if (nextStudent) {
-        console.log(`ROBÔ: Liberando automaticamente ${nextStudent.userName}`);
-        // 6. Prepara a atualização para aprovar (liberar) o próximo aluno
-        updates[`saidas/${nextStudent.id}`] = {
-          ...nextStudent, // Mantém os dados existentes
-          status: "approved",
-          departureTime: new Date().toISOString(),
-          reason: state.settings.defaultReason || "Banheiro"
-        };
-      } else {
-        console.log("ROBÔ: Fila de espera vazia.");
-      }
-
-      // 7. Executa a transação (mover um, aprovar outro)
-      try {
-        await update(ref(db), updates);
-        toast(`Robô: ${arrivingStudent.userName} chegou. ${nextStudent ? nextStudent.userName + ' liberado.' : ''}`, "ok");
-      } catch (e) {
-        console.error("Erro no robô automático:", e);
-        toast("Erro no robô automático.", "error");
-      }
+        // 6. Preenche os slots vagos com alunos pendentes
+        if (slotsAvailable > 0 && pendingStudents.length > 0) {
+            const studentsToRelease = pendingStudents.slice(0, slotsAvailable);
+            
+            for (const student of studentsToRelease) {
+                console.log(`ROBÔ: Liberando automaticamente ${student.userName} (Slot disponível)`);
+                updates[`saidas/${student.id}`] = {
+                    ...student,
+                    status: "approved",
+                    departureTime: new Date().toISOString(),
+                    reason: state.settings.defaultReason || "Banheiro"
+                };
+                actionTaken = true;
+            }
+        }
+        
+        // 7. Se alguma ação foi tomada, envia para o Firebase
+        if (actionTaken) {
+            console.log("ROBÔ: Executando atualizações...", updates);
+            await update(ref(db), updates);
+            return true; // Informa que o robô agiu
+        }
+        
+        return false; // Robô não fez nada
     }
 
 
     function bindRealtime(){
+      // Listener das Configurações
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
         if (s) {
           state.settings = {...state.settings, ...s};
-          // *** NOVO: Atualiza o estado do robô e o botão ***
-          state.settings.isRoboActive = !!s.isRoboActive; 
+          state.settings.isRoboActive = !!s.isRoboActive;
+          // *** NOVO: Carrega o limite (padrão 2) ***
+          state.settings.maxAutoApproved = s.maxAutoApproved || 2; 
+          
           $("#toggle-robo").checked = state.settings.isRoboActive;
+          $("#max-auto").value = state.settings.maxAutoApproved;
         }
         $("#al1").value = state.settings.alertLevels[0];
         $("#al2").value = state.settings.alertLevels[1];
@@ -536,20 +554,25 @@
         $("#def-reason").value = state.settings.defaultReason || "";
       });
       
-      // *** MODIFICADO: O ouvinte da fila agora chama o ROBÔ ***
-      onValue(ref(db, "saidas"), (snap)=>{
+      // Listener da Fila de Saídas (O CÉREBRO DO ROBÔ)
+      onValue(ref(db, "saidas"), async (snap) => {
         const data = snap.val() || {};
         const allDataList = Object.entries(data).map(([id, v])=> ({id, ...v}));
         
-        // *** NOVO: Processa chegadas automáticas ANTES de renderizar ***
-        processAutoArrival(allDataList); 
-        
-        // Se o robô estiver LIGADO, ele esconde os 'chegadaPendente' (pois estão sendo processados)
-        // Se estiver DESLIGADO, ele MOSTRA (para o admin confirmar manualmente)
+        // *** LÓGICA DO ROBÔ ATUALIZADA ***
+        // Tenta processar a fila. Se o robô fizer uma atualização,
+        // esta função (onValue) será chamada novamente.
+        // Por isso, 'return' impede a renderização desnecessária.
+        const roboTookAction = await roboProcessQueue(allDataList);
+        if (roboTookAction) {
+            return; // Pára a execução. O listener será chamado de novo com os dados atualizados.
+        }
+
+        // Se o robô não fez nada (desligado ou sem ações), renderiza o estado atual.
+        // Mostra 'chegadaPendente' para o Admin aprovar manually se o robô estiver DESLIGADO
         if (state.settings.isRoboActive) {
           filaAtivaState = allDataList.filter(r => r.status !== 'completed' && !r.chegadaPendente);
         } else {
-          // Mostra 'chegadaPendente' para o Admin aprovar manualmente
           filaAtivaState = allDataList.filter(r => r.status !== 'completed'); 
         }
 
@@ -557,13 +580,17 @@
         renderSaidas();
       });
       
+      // Listener do Histórico
       onValue(ref(db, "historicoSaidas"), (snap)=>{
         const data = snap.val() || {};
         historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        // Apenas atualiza o estado local, não renderiza
         state.requests = [...filaAtivaState, ...historicoState];
+        // Chama renderSaidas() para garantir que o histórico na UI esteja atualizado
         renderSaidas();
       });
       
+      // Listener das Equipes 5S
       onValue(ref(db, "s5Teams"), (snap)=>{
         const data = snap.val() || {};
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
@@ -582,7 +609,7 @@
           return orderA - orderB;
       });
       
-      // Filtra o histórico
+      // Usa o histórico completo
       const history = historicoState;
       
       $("#pending-count").textContent = pendingAll.length.toString();
@@ -617,7 +644,7 @@
         const right = document.createElement("div");
         right.className = "flex items-center gap-2";
         
-        // *** MODIFICAÇÃO: Botões da Fila Ativa ***
+        // *** Correção dos Botões (Como na versão anterior) ***
         if (!isApproved){
           // (Pendente) - Botão Excluir removido
           right.innerHTML = `<button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
@@ -627,16 +654,13 @@
           // (Aprovado / Fora da sala)
           if (req.chegadaPendente) {
             // Aluno clicou em "Cheguei", robô está desligado
-            // Botão Excluir removido
             right.innerHTML = `<button class="btn-primary" data-act="return" data-id="${req.id}">Confirmar Chegada</button>
                                <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
-            // Adiciona um destaque visual
             li.classList.add("animate-pulse");
-            li.style.borderColor = "#2563eb"; // Borda azul
+            li.style.borderColor = "#2563eb";
             li.style.borderWidth = "2px";
           } else {
             // Aluno está fora, não clicou
-            // Botão Excluir removido
             right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>
                                <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
           }
@@ -646,7 +670,7 @@
         pList.appendChild(li);
       });
       
-      // Renderização do Histórico (sem mudanças, exceto a fonte dos dados)
+      // Renderização do Histórico
       const histBox = $("#history");
       histBox.innerHTML = "";
       const query = ($("#hist-search").value||"").toLowerCase();
@@ -665,7 +689,9 @@
         return db-da;
       });
       
-      if (days.length===0){
+      if (days.length===0 && query){
+        histBox.innerHTML = `<div class="text-sm opacity-70 italic">Nenhum registro encontrado para "${query}".</div>`;
+      } else if (days.length === 0) {
         histBox.innerHTML = `<div class="text-sm opacity-70 italic">Histórico vazio.</div>`;
       }
       
@@ -687,7 +713,6 @@
           const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
           const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
           
-          // *** MODIFICAÇÃO: Botões do Histórico (Manter Editar e Excluir) ***
           li.innerHTML = `<div class="min-w-0 truncate">
                             <b>${r.userName}</b> — <span class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</span>
                             <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
@@ -809,9 +834,8 @@
       const historicoEntry = {
         ...req,
         status: "completed",
-        // Se o aluno clicou, usa o returnTime dele. Senão, usa o agora.
         returnTime: req.returnTime || new Date().toISOString(),
-        chegadaPendente: null // Limpa o aviso
+        chegadaPendente: null
       };
       
       const updates = {};
@@ -825,7 +849,6 @@
         toast("Erro ao mover aluno.", "error");
       }
       
-      // Limpa caches de alarme
       if (state.alarmingStudents.has(id)) {
         state.alarmingStudents.delete(id);
       }
@@ -838,7 +861,6 @@
       const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída PERMANENTEMENTE?");
       if (!ok) return;
       
-      // Procura em AMBOS os estados
       const reqFila = filaAtivaState.find(r => r.id === id);
       const reqHist = historicoState.find(r => r.id === id);
       
@@ -858,7 +880,6 @@
       });
     }
 
-    // *** MODIFICADO: Função de Editar (agora busca em ambos os estados) ***
     async function openEditSaidaModal(id) {
       const req = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
       if (!req) return toast("Registro não encontrado.", "error");
@@ -899,10 +920,9 @@
         requestTime: requestTime || null,
         departureTime: departureTime || null,
         returnTime: returnTime || null,
-        chegadaPendente: null // Limpa o flag ao editar manualmente
+        chegadaPendente: null
       };
 
-      // Encontra o registro original (em qualquer lista)
       const currentReq = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
       if (!currentReq) return toast("Erro: Registro original não encontrado.", "error");
       
@@ -910,22 +930,17 @@
       const willBeInHistory = newStatus === 'completed' || newStatus === 'rejected';
 
       const updates = {};
-      const finalPayload = {...currentReq, ...updatesPayload}; // Junta o original com as mudanças
+      const finalPayload = {...currentReq, ...updatesPayload};
       
-      // Lógica de Mover entre Fila e Histórico
       if (wasInHistory && !willBeInHistory) {
-          // Estava no histórico, vai para a fila
           updates[`historicoSaidas/${id}`] = null;
           updates[`saidas/${id}`] = finalPayload; 
       } else if (!wasInHistory && willBeInHistory) {
-          // Estava na fila, vai para o histórico
           updates[`saidas/${id}`] = null;
           updates[`historicoSaidas/${id}`] = finalPayload;
       } else if (wasInHistory) {
-          // Estava e continua no histórico
           updates[`historicoSaidas/${id}`] = finalPayload;
       } else {
-          // Estava e continua na fila
           updates[`saidas/${id}`] = finalPayload;
       }
       
@@ -939,7 +954,7 @@
       }
     }
     
-    // (Funções de S5 - idênticas à versão anterior)
+    // Funções de S5
     function addS5Team() {
       const p = ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].map(sel => cleanName($(sel).value));
       const payload = {
@@ -997,11 +1012,17 @@
       });
     }
     
-    // *** MODIFICADO: Salva o estado do Robô também ***
+    // *** Salva o estado do Robô e o novo Limite ***
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
       const pers = parseInt($("#alP").value,10);
-      if (vals.some(v=>!v||v<=0) || !pers || pers<=0){ return toast("Valores inválidos.", "error"); }
+      // *** NOVO: Salva o limite ***
+      const maxAuto = parseInt($("#max-auto").value, 10);
+      
+      if (vals.some(v=>!v||v<=0) || !pers || pers<=0){ return toast("Valores de Alerta inválidos.", "error"); }
+      // *** NOVO: Valida o limite ***
+      if (!maxAuto || maxAuto < 1 || maxAuto > 10) { return toast("Limite de Saídas deve ser entre 1 e 10.", "error"); }
+      
       for (let i=0;i<vals.length-1;i++){ if (vals[i] >= vals[i+1]) return toast("Alertas devem ser crescentes.", "error"); }
       if (vals[vals.length-1] >= pers) return toast("Alarme contínuo deve ser maior que o 4º alerta.", "error");
       
@@ -1009,13 +1030,14 @@
         alertLevels: vals,
         persistentAlarmMinutes: pers,
         defaultReason: $("#def-reason").value || "Banheiro",
-        isRoboActive: state.settings.isRoboActive // Garante que o estado do robô seja salvo
+        isRoboActive: state.settings.isRoboActive,
+        maxAutoApproved: maxAuto // *** NOVO: Salva o limite ***
       };
       
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
     
-    // (Funções de Backup/Reset - idênticas à versão anterior)
+    // Funções de Backup/Reset
     async function downloadBackup(){
       const [saidasSnap, s5Snap, confSnap, historicoSnap, usersSnap] = await Promise.all([
         get(ref(db, "saidas")),
@@ -1071,7 +1093,7 @@
       toast("Tudo resetado.", "ok");
     }
     
-    // (Função startClock - idêntica à versão anterior)
+    // Função startClock
     function startClock(){
       if (state.timers.clock) clearInterval(state.timers.clock);
       if (state.timers.alert) clearInterval(state.timers.alert);
@@ -1161,12 +1183,10 @@
         const act = btn.dataset.act, id = btn.dataset.id;
         if (act === "approve") approve(id);
         if (act === "reject") reject(id);
-        if (act === "return") arrived(id); // Este é o "Chegou" manual ou a confirmação
-        if (act === "del-saida") removeReq(id); // (Este botão não existe mais na fila)
+        if (act === "return") arrived(id);
         if (act === "edit-saida") openEditSaidaModal(id);
       });
       
-      // ... (Eventos de Drag-n-Drop - idênticos)
       let dragSrcId = null;
       function cleanupDragStyles() {
         $$('#pending-list li').forEach(li => {
@@ -1230,14 +1250,13 @@
         cleanupDragStyles();
       });
       
-      // *** MODIFICADO: Eventos do Histórico ***
       $("#history").addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-act]");
         if (btn) {
-          e.stopPropagation(); // Impede que o dia recolha ao clicar no botão
+          e.stopPropagation();
           const act = btn.dataset.act, id = btn.dataset.id;
-          if (act === "del-saida") removeReq(id); // Excluir funciona aqui
-          if (act === "edit-saida") openEditSaidaModal(id); // Editar funciona aqui
+          if (act === "del-saida") removeReq(id);
+          if (act === "edit-saida") openEditSaidaModal(id);
           return;
         }
         const hdr = e.target.closest("div[data-day]");
@@ -1268,7 +1287,6 @@
       $("#btn-reset").addEventListener("click", resetAll);
       $$(".tab-btn").forEach(b => b.addEventListener("click", () => activateTab(b.dataset.tab)));
       
-      // *** NOVO: Evento do Toggle do Robô ***
       $("#toggle-robo").addEventListener("change", (e) => {
         state.settings.isRoboActive = e.target.checked;
         toast(`Robô ${state.settings.isRoboActive ? 'LIGADO' : 'DESLIGADO'}.`, "ok");
@@ -1314,8 +1332,8 @@
         } else {
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** IMPORTANTE: Certifique-se que sua página de login chama-se 'login.html' ***
-          window.location.href = "login.html"; 
+          // *** CORREÇÃO: Adicionado "./" para formar uma URL válida ***
+          window.location.href = "./Login.html"; 
         }
       });
     }
