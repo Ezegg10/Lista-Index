@@ -1546,8 +1546,11 @@
         } else {
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** CORREÇÃO: "admin.html" (minúsculo) para "Login.html" (maiúsculo) ***
-          window.location.href = window.location.href.replace("admin.html", "Login.html"); 
+          
+          // === CORREÇÃO APLICADA AQUI ===
+          // Em vez de substituir o texto, definimos o URL diretamente.
+          // Isto é mais robusto e corrige o bug de maiúsculas/minúsculas.
+          window.location.href = "./Login.html"; 
         }
       });
     }
