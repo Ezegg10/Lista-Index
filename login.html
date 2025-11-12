@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Acesso de Administrador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'system-ui', 'ui-sans-serif']},
+        }
+      }
+    }
+  </script>
+  <style>
+    :root{--border:rgba(148,163,184,.25)}
+    .input{border:1px solid var(--border);border-radius:12px;padding:.65rem .8rem;background:#0b1220;color:#f8fafc;transition:all .2s}
+    .input:focus{box-shadow:0 0 0 3px rgba(37,99,235,.2);border-color:#2563eb}
+    .btn-primary{background:#2563eb;color:#fff;border-radius:12px;padding:.65rem .95rem;font-weight:800;transition:transform .05s ease;box-shadow:0 10px 25px -10px rgba(37,99,235,.6)}
+    .btn-primary:hover{background:#1d4ed8}
+    .btn-primary:active{transform:translateY(1px)}
+    #toast{background:#111827;color:#fff;border-radius:9999px;padding:.6rem 1rem;font-weight:800;box-shadow:0 10px 25px -12px rgba(0,0,0,.35)}
+  </style>
+  <script>
+    (function() {
+      document.documentElement.classList.add("dark");
+    })();
+  </script>
+</head>
+<body class="font-inter bg-slate-900 text-slate-100">
+
+  <!-- Layout de Login Centralizado -->
+  <div class="flex min-h-screen items-center justify-center p-4">
+    <div class="w-full max-w-md rounded-2xl bg-slate-800 shadow-xl p-6">
+      <div class="flex items-center gap-3 mb-4">
+        <h2 class="text-xl font-extrabold">Acesso de Administrador</h2>
+      </div>
+      <p class="text-sm opacity-80 mb-4">Entre com seu usuário e senha.</p>
+      <div class="grid gap-3">
+        <input id="login-user" class="input" placeholder="Usuário (ex: ezequiel)" type="text">
+        <input id="login-pin" class="input" placeholder="Senha" type="password">
+        <button id="login-btn" class="btn-primary">Entrar</button>
+      </div>
+      <p id="login-msg" class="mt-3 text-sm text-red-500 hidden"></p>
+    </div>
+  </div>
+
+  <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
+
+  <!-- Imports do Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+
+    /* ========================== Config Firebase ========================== */
+    // (A mesma configuração do seu admin.html)
+    const firebaseConfig = {
+      apiKey: "AIzaSyBl8K0WVSDtGsgJygr3yCSsQ_voywnm114",
+      authDomain: "gerenciador-saidas-5s-e4c58.firebaseapp.com",
+      databaseURL: "https://gerenciador-saidas-5s-e4c58-default-rtdb.firebaseio.com",
+      projectId: "gerenciador-saidas-5s-e4c58",
+      storageBucket: "gerenciador-saidas-5s-e4c58.firebasestorage.app",
+      messagingSenderId: "990056306037",
+      appId: "1:990056306037:web:7bb1f8b8247631acb3af3c",
+      measurementId: "G-0ZFEQRYPQT"
+    };
+
+    let app, auth;
+    try {
+      app = initializeApp(firebaseConfig);
+      auth = getAuth(app);
+    } catch (e) {
+      console.error("Erro ao inicializar Firebase:", e);
+      alert("Erro crítico ao conectar com o servidor.");
+    }
+    
+    /* ========================== Lógica de Login ========================== */
+    const $ = (sel) => document.querySelector(sel);
+
+    function toast(msg, kind="info"){
+      const box = $("#toast");
+      box.textContent = msg;
+      box.classList.remove("hidden");
+      box.style.background = kind==="error" ? "#ef4444" : (kind==="ok" ? "#065f46" : "#111827");
+      setTimeout(()=>box.classList.add("hidden"), 3000);
+    }
+    
+    // 1. Lista de utilizadores autorizados (UIDs e Emails)
+    const AUTORIZADOS = [
+      "XRNnXkCKpEVrSphw76uMIGv0Wo83", // Ezequiel
+      "0gIA2f3bzCMnieCSJWUlbhY4Blu1", // Larissa
+      "ezequiel@admin.com",
+      "larissa@admin.com"
+    ];
+
+    // 2. Função de login com Firebase Auth
+    async function login(user, pin){
+      user = (user||"").trim().toLowerCase();
+      pin = (pin||"").trim();
+      
+      if (!user || !pin) {
+        $("#login-msg").textContent = "Usuário e Senha são obrigatórios.";
+        $("#login-msg").classList.remove("hidden");
+        return false;
+      }
+
+      // === O "TRUQUE" ===
+      // Converte o nome de usuário (ex: "ezequiel") em um email (ex: "ezequiel@admin.com")
+      let email = user;
+      if (!email.includes('@')) {
+        email = email + "@admin.com";
+      }
+      
+      $("#login-btn").disabled = true;
+      $("#login-btn").textContent = "Verificando...";
+      $("#login-msg").classList.add("hidden");
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, pin);
+        const firebaseUser = userCredential.user;
+
+        // VERIFICA SE ESTÁ NA LISTA
+        if (AUTORIZADOS.includes(firebaseUser.uid) || AUTORIZADOS.includes(firebaseUser.email)) {
+          toast("Bem-vindo!", "ok");
+          // === CORREÇÃO ===
+          window.location.href = "./admin.html"; // Vai para a página de admin
+        } else {
+          // Se não estiver autorizado, desloga imediatamente
+          await signOut(auth);
+          $("#login-msg").textContent = "Utilizador não autorizado.";
+          $("#login-msg").classList.remove("hidden");
+          $("#login-btn").disabled = false;
+          $("#login-btn").textContent = "Entrar";
+        }
+        
+      } catch (error) {
+        // Trata erros comuns de login
+        console.error("Erro de login:", error.code, error.message);
+        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password' || error.code === 'auth/invalid-credential') {
+          $("#login-msg").textContent = "Usuário ou Senha inválidos.";
+        } else {
+          $("#login-msg").textContent = "Erro ao tentar entrar.";
+        }
+        $("#login-msg").classList.remove("hidden");
+        $("#login-btn").disabled = false;
+        $("#login-btn").textContent = "Entrar";
+      }
+    }
+
+    // 3. Verificação de sessão (Auto-login)
+    function tryAutoLogin(){
+      onAuthStateChanged(auth, (firebaseUser) => {
+        if (firebaseUser) {
+          // Se já está logado, verifica se está autorizado
+          if (AUTORIZADOS.includes(firebaseUser.uid) || AUTORIZADOS.includes(firebaseUser.email)) {
+            // Se sim, redireciona para o admin
+            console.log("Sessão ativa encontrada. Redirecionando...");
+            // === CORREÇÃO ===
+            window.location.href = "./admin.html";
+          } else {
+            // Se for um utilizador logado mas não autorizado, desloga
+            console.log("Sessão ativa não autorizada. Deslogando...");
+            signOut(auth);
+          }
+        } else {
+          // Se não está logado, permanece na página de login
+          console.log("Nenhuma sessão ativa.");
+        }
+      });
+    }
+
+    /* ========================== Boot (Página de Login) ========================== */
+    
+    // Verifica se já está logado ao carregar a página
+    tryAutoLogin();
+
+    // Adiciona o evento de clique ao botão
+    $("#login-btn").addEventListener("click", async () => {
+      await login($("#login-user").value, $("#login-pin").value);
+    });
+    
+    // Adiciona evento de "Enter"
+    $("#login-pin").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        $("#login-btn").click();
+      }
+    });
+    $("#login-user").addEventListener("keypress", (e) => {
+      if (e.key === "Enter") {
+        $("#login-btn").click();
+      }
+    });
+
+  </script>
+</body>
+</html>
