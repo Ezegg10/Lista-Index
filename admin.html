@@ -303,15 +303,14 @@
 
     /* ========================== Firebase init ========================== */
     const firebaseConfig = {
-      // (Use suas chaves originais aqui)
-      apiKey: "[SUA_API_KEY]",
-      authDomain: "[SEU_AUTH_DOMAIN]",
-      databaseURL: "[SEU_DATABASE_URL]",
-      projectId: "[SEU_PROJECT_ID]",
-      storageBucket: "[SEU_STORAGE_BUCKET]",
-      messagingSenderId: "[SEU_SENDER_ID]",
-      appId: "[SEU_APP_ID]",
-      measurementId: "[SEU_MEASUREMENT_ID]"
+      apiKey: "AIzaSyBl8K0WVSDtGsgJygr3yCSsQ_voywnm114",
+      authDomain: "gerenciador-saidas-5s-e4c58.firebaseapp.com",
+      databaseURL: "https://gerenciador-saidas-5s-e4c58-default-rtdb.firebaseio.com",
+      projectId: "gerenciador-saidas-5s-e4c58",
+      storageBucket: "gerenciador-saidas-5s-e4c58.firebasestorage.app",
+      messagingSenderId: "990056306037",
+      appId: "1:990056306037:web:7bb1f8b8247631acb3af3c",
+      measurementId: "G-0ZFEQRYPQT"
     };
 
     let app, db, auth;
@@ -457,6 +456,7 @@
       try {
         await signOut(auth);
         toast("Sessão terminada.", "ok");
+        // A verificação do 'boot()' vai apanhar o logout e redirecionar
       } catch (error) {
         console.error("Erro ao sair:", error);
       }
@@ -1355,27 +1355,57 @@
       $("#logout-btn").addEventListener("click", logout);
     }
 
-    /* ========================== Boot ========================== */
+    /* ========================== Boot (MODIFICADO) ========================== */
+    
+    // Lista de UIDs/Emails autorizados (copiada de login.html)
+    // ESTA É A VERIFICAÇÃO DE SEGURANÇA ADICIONADA
+    const AUTORIZADOS = [
+      "XRNnXkCKpEVrSphw76uMIGv0Wo83", // Ezequiel
+      "0gIA2f3bzCMnieCSJWUlbhY4Blu1", // Larissa
+      "ezequiel@admin.com",
+      "larissa@admin.com"
+    ];
+        
     function boot(){
-      onAuthStateChanged(auth, (firebaseUser) => {
+      // 'async' foi adicionado para podermos usar 'await signOut()'
+      onAuthStateChanged(auth, async (firebaseUser) => {
+        
         if (firebaseUser) {
-          console.log("Sessão válida, a carregar app...");
-          state.session = true; 
+          // Utilizador está LOGADO. Agora verificamos se está AUTORIZADO.
           
-          initAudio();
-          bindEvents();
-          bindRealtime();
-          startClock();
-          activateTab("saidas");
-          
-          document.documentElement.style.opacity = "1";
-          document.getElementById('app').classList.remove('opacity-0');
+          if (AUTORIZADOS.includes(firebaseUser.uid) || AUTORIZADOS.includes(firebaseUser.email)) {
+            // --- SUCESSO: Utilizador logado E autorizado ---
+            console.log("Sessão válida e autorizada, a carregar app...");
+            state.session = true; 
+            
+            initAudio();
+            bindEvents();
+            bindRealtime();
+            startClock();
+            activateTab("saidas");
+            
+            // Mostra a aplicação
+            document.documentElement.style.opacity = "1";
+            document.getElementById('app').classList.remove('opacity-0');
+
+          } else {
+            // --- FALHA: Utilizador logado, mas NÃO AUTORIZADO ---
+            console.warn("Sessão válida, mas NÃO AUTORIZADA. A deslogar e redirecionar...");
+            state.session = null;
+            await signOut(auth); // Desloga o utilizador imediatamente
+            
+            // Redireciona para a página de login (CORRIGIDO)
+            window.location.href = window.location.href.replace("admin.html", "login.html"); 
+          }
 
         } else {
+          // --- FALHA: Utilizador não está logado ---
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** CORREÇÃO: Redirecionamento direto para Login.html ***
-          window.location.href = "./Login.html"; 
+          
+          // Redireciona para a página de login (CORRIGIDO)
+          // Usamos 'login.html' (minúsculo) para corresponder ao nome do seu arquivo
+          window.location.href = window.location.href.replace("admin.html", "login.html"); 
         }
       });
     }
