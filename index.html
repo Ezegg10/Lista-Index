@@ -1,0 +1,1119 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Portal do Aluno - Saídas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    // Lógica de Dark Mode (para evitar flash)
+    if (localStorage.getItem('theme') === 'dark' || 
+       (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+    // Oculta a página inicialmente para evitar "flash" de conteúdo
+    document.documentElement.style.opacity = "0";
+  </script>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { inter: ['Inter', 'system-ui', 'ui-sans-serif']},
+          colors: {
+            brand: {
+              DEFAULT: '#2563eb',
+              dark: '#1d4ed8'
+            }
+          },
+          boxShadow: {
+            soft: '0 10px 25px -10px rgba(0,0,0,.25)'
+          }
+        }
+      }
+    }
+  </script>
+
+
+  <style>
+    :root{
+      --border:rgba(148,163,184,.35);
+      --bg-primary: #fff;
+      --bg-secondary: #f8fafc;
+      --bg-card: #fff;
+      --bg-app: #f1f5f9;
+      --text-primary: #0f172a;
+      --text-secondary: #334155;
+    }
+    .dark {
+      --border:rgba(148,163,184,.25);
+      --bg-primary: #0b1220;
+      --bg-secondary: #131b2b;
+      --bg-card: #0b1220;
+      --bg-app: #020617;
+      --text-primary: #f8fafc;
+      --text-secondary: #cbd5e1;
+    }
+    
+    body {
+      background-color: var(--bg-app);
+      color: var(--text-primary);
+      transition: background-color 0.3s, color 0.3s;
+    }
+    
+    *{outline:0}
+    
+    .input{
+      border:1px solid var(--border); border-radius:12px; padding:.65rem .8rem;
+      background:var(--bg-primary); color:var(--text-primary); transition:all .2s
+    }
+    .input:focus{box-shadow:0 0 0 3px rgba(37,99,235,.2); border-color:#2563eb}
+    
+    .btn-primary{background:#2563eb; color:#fff; border-radius:12px; padding:.65rem .95rem; font-weight:800; transition:all .1s ease; box-shadow:0 10px 25px -10px rgba(37,99,235,.6)}
+    .btn-primary:hover{background:#1d4ed8}
+    .btn-primary:active{transform:translateY(1px) scale(.98)}
+    .btn-primary:disabled { background: #60a5fa; cursor: not-allowed; }
+    
+    .btn-secondary{background:var(--bg-secondary); border:1px solid var(--border); border-radius:12px; padding:.6rem .9rem; font-weight:700}
+    .btn-danger{background:#ef4444; color:#fff; border-radius:12px; padding:.6rem .9rem; font-weight:800}
+    .btn-ghost{border:1px solid var(--border); border-radius:12px; padding:.5rem .8rem; font-weight:700; background:transparent}
+    .btn-icon{border:1px solid var(--border); border-radius:12px; padding: .5rem; font-weight:700; background:transparent; line-height:1; min-width: 38px; text-align: center;}
+    .btn-icon:hover, .btn-ghost:hover { background-color: rgba(148,163,184,.1); }
+    
+    .card{
+      border:1px solid var(--border); background:var(--bg-card); 
+      border-radius:16px; padding:1rem 1rem 1.25rem 1rem; 
+      box-shadow:0 10px 25px -12px rgba(0,0,0,.1);
+      transition: background-color 0.3s;
+    }
+    
+    .section-title{font-weight:800}
+    .badge{background:#fde68a; color:#78350f; border-radius:9999px; padding:.1rem .55rem; font-size:.75rem; font-weight:800}
+    
+    .field>label{display:block; font-size:.85rem; opacity:.8; margin-bottom:.25rem}
+    
+    .tab-btn{
+      border:1px solid transparent; border-radius:10px; padding:.55rem .7rem;
+      text-align:left; font-weight:800; background:transparent; 
+      display: flex; align-items: center; color: var(--text-secondary);
+      position: relative;
+    }
+    .tab-btn:hover { background-color: rgba(148,163,184,.1); }
+    .tab-btn.active{
+      background:var(--bg-primary); color:var(--text-primary); 
+      border-color: var(--border);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,.05);
+    }
+    
+    #toast{
+      background:#111827; color:#fff; border-radius:9999px; padding:.6rem 1rem;
+      font-weight:800; box-shadow:0 10px 25px -12px rgba(0,0,0,.35);
+      border: 1px solid var(--border);
+      z-index: 100;
+    }
+    .dark #toast { background: #f8fafc; color: #111827; }
+
+    /* Estilos da Fila */
+    .pending-item{
+      border:1px solid var(--border); border-left:4px solid #f59e0b; 
+      background:var(--bg-secondary); border-radius:12px; padding:.7rem .75rem;
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    }
+    .approved-item{
+      border:1px solid var(--border); border-left:4px solid #22c55e; 
+      background:var(--bg-secondary); border-radius:12px; padding:.7rem .75rem;
+      display:flex; align-items:center; justify-content:space-between; gap:.75rem;
+    }
+    /* Estilo para destacar o pedido do próprio aluno */
+    .my-request {
+      background-color: #e0f2fe; 
+      border-color: #0284c7; 
+    }
+    .dark .my-request {
+      background-color: #0c4a6e; 
+      border-color: #38bdf8; 
+    }
+    
+    .hidden{display:none}
+    #modal-overlay.flex { display: flex; } /* Apenas o modal genérico */
+
+    /* Estilos de Alarme (para fila) */
+    @keyframes pulse-red {
+      0%, 100% { background-color: #ef4444; color: white; }
+      50% { background-color: #f87171; color: white; }
+    }
+    .alarm-level-1 { background-color: #fef3c7; }
+    .dark .alarm-level-1 { background-color: #422006; }
+    .alarm-level-2 { background-color: #fde68a; }
+    .dark .alarm-level-2 { background-color: #78350f; }
+    .alarm-level-3 { background-color: #fca5a5; }
+    .dark .alarm-level-3 { background-color: #7f1d1d; }
+    .alarm-level-4 { animation: pulse-red 1.5s infinite; border-color: #b91c1c; }
+    .dark .alarm-level-4 { animation: pulse-red 1.5s infinite; border-color: #ef4444; }
+    
+    .chat-fab {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      z-index: 45;
+      background-color: #2563eb;
+      color: white;
+      border-radius: 50%;
+      width: 56px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 10px 25px -10px rgba(37,99,235,.6);
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+    .chat-fab:hover { background-color: #1d4ed8; transform: scale(1.05); }
+    .chat-fab svg { width: 28px; height: 28px; }
+
+    /* Animação para a tela "LIBERADO" */
+    @keyframes popIn {
+      0% { transform: scale(0.8); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .status-animate {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    
+  </style>
+
+</head>
+<body class="font-inter"> 
+
+    <!-- Tela de Login (Overlay) -->
+    <div id="login-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
+      <h2 class="text-xl font-extrabold text-center mb-4">Acesso do Aluno</h2>
+      <p class="text-sm opacity-80 mb-4 text-center">Digite seu nome para entrar.</p>
+      <div class="grid gap-3">
+        <input id="login-user" class="input" placeholder="Seu Nome">
+        <button id="login-btn" class="btn-primary">Entrar</button>
+      </div>
+      <p id="login-msg" class="mt-3 text-sm text-red-500 hidden"></p>
+    </div>
+  </div>
+
+    <!-- Modal Genérico (Para confirmações) -->
+    <div id="modal-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 id="modal-title" class="text-xl font-extrabold">Editar</h2>
+        <button id="modal-close" class="btn-icon">✖</button>
+      </div>
+      <div id="modal-content" class="grid gap-3">
+      </div>
+      <div class="mt-4 flex gap-2">
+        <button id="modal-save" class="btn-primary flex-1">Salvar</button>
+        <button id="modal-cancel" class="btn-secondary flex-1">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Conteúdo Principal da Aplicação -->
+  <!-- A classe 'opacity-0' é removida pelo JS quando tudo está pronto -->
+  <div id="app" class="opacity-0">
+    
+    <!-- Tela de Status "LIBERADO" (Overlay) -->
+    <div id="status-overlay" class="fixed inset-0 z-40 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+      <div class="status-animate text-center">
+        <h1 class="text-6xl sm:text-8xl font-black text-emerald-400">LIBERADO</h1>
+        <p class="text-lg sm:text-xl text-white/80 mt-2">Você já pode sair.</p>
+        
+        <!-- Botão para o aluno confirmar que voltou -->
+        <button id="btn-chegou" class="btn-primary mt-8 text-2xl font-bold px-10 py-4">
+            Cheguei
+        </button>
+      </div>
+    </div>
+    
+    <!-- Cabeçalho -->
+    <header class="sticky top-0 z-40 backdrop-blur bg-white/70 dark:bg-slate-900/70 border-b border-slate-200/60 dark:border-slate-700/60">
+      <div class="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <h1 class="text-lg sm:text-2xl font-black">Portal do Aluno</h1>
+        </div>
+        <div class="flex items-center gap-2">
+          <span id="clock" class="hidden sm:inline font-mono text-sm opacity-80"></span>
+          <span id="student-name-display" class="hidden sm:inline text-sm font-bold opacity-90"></span>
+          
+          <!-- Botão de Tema (Dark/Light) -->
+          <button id="theme-toggle-btn" class="btn-icon w-10 h-10">
+            <svg id="theme-icon-dark" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+            </svg>
+            <svg id="theme-icon-light" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z" />
+            </svg>
+          </button>
+          
+          <button id="logout-btn" class="btn-ghost">Sair</button>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-6 grid md:grid-cols-[280px,1fr] gap-6">
+      
+      <!-- Navegação Lateral -->
+      <aside class="rounded-2xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 p-4 space-y-4 h-fit md:sticky md:top-20">
+        <h3 class="text-base font-extrabold px-3">Navegação</h3>
+        <nav class="grid gap-2">
+          <button class="tab-btn active" data-tab="saidas">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd" /></svg>
+            Controle de Saídas
+          </button>
+          
+          <button class="tab-btn" data-tab="s5">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline-block mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" /><path fill-rule="evenodd" d="M4 5a2 2 0 012-2h8a2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h.01a1 1 0 100-2H10zm3 0a1 1 0 000 2h.01a1 1 0 100-2H13z" clip-rule="evenodd" /></svg>
+            Gestão 5S
+          </button>
+        </nav>
+
+        <div class="rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300 p-3 text-sm">
+          <b>Status:</b> <span id="status-conn">Conectado</span> <span class="opacity-70">(Nuvem)</span>
+        </div>
+      </aside>
+
+      <!-- Conteúdo das Abas -->
+      <section class="space-y-6">
+        
+        <!-- Aba: Saídas -->
+        <div id="tab-saidas" class="card">
+          <h2 class="text-xl font-bold">Painel de Saída</h2>
+          <p class="text-sm opacity-70">Horário de Brasília</p>
+
+          <!-- Caixa para pedir para sair -->
+          <div id="request-box" class="mt-6">
+            <h3 class="section-title">Solicitar Saída</h3>
+            <p class="text-sm opacity-70 mb-2">Clique no botão para entrar na fila de espera.</p>
+            <button id="btn-add" class="btn-primary w-full">Pedir para Sair</button>
+          </div>
+
+          <!-- Fila de Espera -->
+          <div class="mt-8">
+            <div class="flex items-center justify-between">
+              <h3 class="section-title">Fila de Saída & Retorno <span id="pending-count" class="badge">0</span></h3>
+            </div>
+            <ul id="pending-list" class="mt-3 grid gap-3">
+              <li class="text-sm opacity-70 italic">Carregando fila...</li>
+            </ul>
+          </div>
+
+          <!-- Histórico do Aluno -->
+          <div class="mt-8">
+            <div class="flex items-center justify-between">
+              <h3 class="section-title">Meu Histórico</h3>
+              <input id="hist-search" class="input w-56" placeholder="🔎 Filtrar histórico...">
+            </div>
+            <div id="history" class="mt-3 grid gap-2">
+            </div>
+          </div>
+        </div>
+
+        <!-- Aba: 5S -->
+        <div id="tab-s5" class="card hidden">
+          <h2 class="text-xl font-bold mb-4 text-center">Gestão de Qualidade 5S</h2>
+          <h3 class="section-title">Equipes da Semana</h3>
+          <p class="text-sm opacity-70 mb-4">Veja as equipes responsáveis pela gestão 5S.</p>
+          <ul id="s5-list" class="mt-6 grid gap-2">
+            <!-- Equipes 5S injetadas aqui -->
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Botão Flutuante (Formulário) -->
+    <a id="chat-fab-btn" 
+       href="https://forms.gle/HJLqG9VJWkmg3c9R6" 
+       target="_blank" 
+       rel="noopener noreferrer" 
+       class="chat-fab" 
+       title="Abrir Formulário de Contato">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 0 0-3.375-3.375h-1.5A1.125 1.125 0 0 1 13.5 7.125v-1.5a3.375 3.375 0 0 0-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 0 0-9-9Z" />
+      </svg>
+    </a>
+
+    <!-- Toast (Notificações) -->
+    <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
+
+  </div> <!-- Fim de #app -->
+
+  <script>
+    // Mostra a página após o JS carregar
+    window.addEventListener('load', () => {
+      document.documentElement.style.opacity = "1";
+      document.getElementById('app').classList.remove('opacity-0');
+    });
+  </script>
+
+  <!-- Módulos do Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getDatabase, ref, set, get, onValue, push, update, remove, off, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
+
+    // Funções Utilitárias Globais
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => [...document.querySelectorAll(sel)];
+
+    /* ========================== Configuração Firebase ========================== */
+    // As chaves do Firebase são públicas e seguras para expor no cliente
+    const firebaseConfig = {
+      apiKey: "AIzaSyBl8K0WVSDtGsgJygr3yCSsQ_voywnm114",
+      authDomain: "gerenciador-saidas-5s-e4c58.firebaseapp.com",
+      databaseURL: "https://gerenciador-saidas-5s-e4c58-default-rtdb.firebaseio.com",
+      projectId: "gerenciador-saidas-5s-e4c58",
+      storageBucket: "gerenciador-saidas-5s-e4c58.firebasestorage.app",
+      messagingSenderId: "990056306037",
+      appId: "1:990056306037:web:7bb1f8b8247631acb3af3c",
+      measurementId: "G-0ZFEQRYPQT"
+    };
+
+    let app, db;
+    try {
+      app = initializeApp(firebaseConfig);
+      db = getDatabase(app);
+      $("#status-conn").textContent = "Conectado";
+    } catch(e) {
+      console.error("Falha ao inicializar Firebase:", e);
+      $("#status-conn").textContent = "Desconectado";
+    }
+    
+    /* ========================== Estado da Aplicação (State) ========================== */
+    const state = {
+      session: null, // Guarda { userKey: "teste", displayName: "Teste" }
+      settings: {
+        alertLevels: [6,10,15,20],
+        persistentAlarmMinutes: 25,
+        defaultReason: "Banheiro"
+      },
+      requests: [], // Lista combinada (fila + histórico)
+      s5Teams: [],
+      
+      // Estado do Áudio e Timers
+      audioInitialized: false,
+      audioCtx: null,
+      alarmOn: true,
+      alarmingStudents: new Set(),
+      timers: { clock:null, alert:null },
+      editingItemId: null,
+    };
+
+    // Estados separados para a fila e histórico (para otimizar renderização)
+    let filaAtivaState = [];
+    let historicoState = [];
+
+    /* ========================== Utilitários (Utils) ========================== */
+    
+    // Formata milissegundos para "Xm Ys"
+    const fmtDur = (ms)=>{
+      if (isNaN(ms) || ms < 0) return "0m 0s";
+      const s = Math.floor(ms/1000);
+      return `${Math.floor(s/60)}m ${s%60}s`;
+    };
+    
+    // NOME DE EXIBIÇÃO: "Teste" ou "Ana Clara"
+    const cleanName = (n)=> (n||"").trim().toLowerCase().split(" ").filter(Boolean).map(w=>w[0].toUpperCase()+w.slice(1)).join(" ");
+    
+    // CHAVE DE USUÁRIO: "teste" ou "anaclara"
+    const formatUserKey = (n) => (n||"").trim().toLowerCase().split(" ").filter(Boolean).join("");
+    
+    // Exibe uma notificação curta (toast)
+    function toast(msg, kind="info"){
+      const box = $("#toast");
+      box.textContent = msg;
+      box.classList.remove("hidden");
+      box.style.background = kind==="error" ? "#ef4444" : (kind==="ok" ? "#065f46" : "");
+      if (document.documentElement.classList.contains('dark')) {
+          box.style.background = kind==="error" ? "#ef4444" : (kind==="ok" ? "#10b981" : "");
+      }
+      setTimeout(()=>box.classList.add("hidden"), 3000);
+    }
+
+    /* ========================== Áudio (Apenas Alarme) ========================== */
+    
+    // Inicializa o contexto de áudio (requer interação do usuário)
+    function initAudio() {
+      if (state.audioInitialized) return;
+      try {
+        state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        state.audioInitialized = true;
+      } catch (e) { console.error("AudioContext não suportado.", e); }
+    }
+
+    // Toca um bipe de alerta
+    function playBeep() {
+      if (!state.audioCtx || !state.alarmOn) return;
+      try {
+        const oscillator = state.audioCtx.createOscillator();
+        const gainNode = state.audioCtx.createGain();
+        oscillator.connect(gainNode);
+        gainNode.connect(state.audioCtx.destination);
+        oscillator.type = 'sine';
+        oscillator.frequency.setValueAtTime(1000, state.audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.5, state.audioCtx.currentTime);
+        oscillator.start(state.audioCtx.currentTime);
+        oscillator.stop(state.audioCtx.currentTime + 0.2); 
+      } catch (e) { console.error("Falha ao tocar bipe:", e); }
+    }
+    
+    /* ========================== Modal Genérico (Confirmação) ========================== */
+    const $modalOverlay = $("#modal-overlay");
+    const $modalTitle = $("#modal-title");
+    const $modalContent = $("#modal-content");
+    const $modalSave = $("#modal-save");
+    const $modalCancel = $("#modal-cancel");
+    const $modalClose = $("#modal-close");
+    let onModalSave = () => {};
+    let onModalCancel = () => {};
+
+    // Abre um modal de confirmação "Sim/Não"
+    function openConfirmModal(text, callback) {
+      $modalTitle.textContent = "Confirmação";
+      $modalContent.innerHTML = `<p>${text}</p>`;
+      $modalSave.textContent = "Confirmar";
+      $modalCancel.textContent = "Cancelar";
+      onModalSave = () => { closeModal(); callback(true); };
+      onModalCancel = () => { closeModal(); callback(false); };
+      $modalOverlay.classList.remove("hidden");
+      $modalOverlay.classList.add("flex");
+    }
+    
+    function closeModal() {
+      $modalOverlay.classList.add("hidden");
+      $modalOverlay.classList.remove("flex");
+      $modalContent.innerHTML = "";
+      state.editingItemId = null;
+      onModalSave = () => {};
+      onModalCancel = () => {};
+    }
+    
+    $modalSave.addEventListener("click", () => onModalSave());
+    $modalCancel.addEventListener("click", closeModal);
+    $modalClose.addEventListener("click", closeModal);
+
+    // Versão "Promise" do modal de confirmação
+    function confirmBox(text) {
+      return new Promise((resolve) => {
+        openConfirmModal(text, (ok) => {
+          resolve(ok);
+        });
+      });
+    }
+
+    /* ========================== Login / Logout ========================== */
+    
+    // Exibe ou esconde a tela de login
+    function showLogin(show){
+      $("#login-overlay").classList.toggle("hidden", !show);
+      $("#login-overlay").classList.toggle("flex", show);
+      if (show) $("#login-user").focus();
+    }
+
+    // Tenta logar automaticamente com dados do localStorage
+    function tryAutoLogin(){
+      try {
+        const raw = localStorage.getItem("sessionUser");
+        if (!raw) return false;
+        const sess = JSON.parse(raw);
+        if (!sess || !sess.userKey || !sess.displayName) return false; 
+        state.session = sess; 
+        return true;
+      } catch(e){ return false; }
+    }
+
+    // Processa o login do aluno
+    function login(userInput){
+      const displayName = cleanName(userInput); // ex: "Teste"
+      const userKey = formatUserKey(userInput); // ex: "teste"
+
+      if (!userKey) {
+        $("#login-msg").classList.remove("hidden");
+        $("#login-msg").textContent = "Por favor, digite seu nome.";
+        return false;
+      }
+      
+      state.session = { userKey: userKey, displayName: displayName, ts: Date.now() };
+      localStorage.setItem("sessionUser", JSON.stringify(state.session));
+      
+      // Salva o usuário no Firebase (útil para o Admin ver quem está online)
+      const userRef = ref(db, `users/${userKey}`);
+      set(userRef, { 
+        lastSeen: new Date().toISOString(),
+        displayName: displayName 
+      });
+      
+      // Define uma ação para quando o usuário fechar a aba (ficar offline)
+      onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
+      
+      showLogin(false);
+      $("#student-name-display").textContent = state.session.displayName.split(" ")[0]; 
+      toast(`Bem-vindo, ${state.session.displayName.split(" ")[0]}!`, "ok");
+      
+      renderSaidas(); // Renderiza a fila e histórico
+      return true;
+    }
+
+    // Processa o logout do aluno
+    async function logout(){
+      if (!state.session || !state.session.userKey) {
+        localStorage.removeItem("sessionUser");
+        state.session = null;
+        showLogin(true);
+        return;
+      }
+      
+      const currentUserKey = state.session.userKey;
+      
+      const ok = await confirmBox(
+        "Tem certeza que quer sair? O seu histórico de saídas NÃO será afetado."
+      );
+
+      if (!ok) return;
+
+      try {
+        // Apaga apenas o perfil de usuário (para ficar offline)
+        const userRef = ref(db, `users/${currentUserKey}`);
+        onDisconnect(userRef).cancel(); // Cancela a ação de offline
+        await remove(userRef); // Remove o usuário da lista de "online"
+
+        localStorage.removeItem("sessionUser");
+        state.session = null;
+        $("#student-name-display").textContent = "";
+        
+        $("#pending-list").innerHTML = "";
+        $("#history").innerHTML = "";
+        
+        toast("Você saiu.", "ok");
+        showLogin(true); 
+
+      } catch (error) {
+        console.error("Erro ao fazer logout:", error);
+        toast("Erro ao tentar sair.", "error");
+        
+        // Força o logout local mesmo se o firebase falhar
+        localStorage.removeItem("sessionUser");
+        state.session = null;
+        showLogin(true);
+      }
+    }
+
+    /* ========================== Tema (Dark/Light Mode) ========================== */
+    function setupThemeToggle() {
+      const $btn = $("#theme-toggle-btn");
+      const $iconDark = $("#theme-icon-dark");
+      const $iconLight = $("#theme-icon-light");
+
+      // Define o ícone correto ao carregar
+      if (document.documentElement.classList.contains('dark')) {
+        $iconLight.classList.remove('hidden');
+      } else {
+        $iconDark.classList.remove('hidden');
+      }
+
+      // Adiciona o evento de clique
+      $btn.addEventListener("click", () => {
+        const isDark = document.documentElement.classList.toggle('dark');
+        $iconDark.classList.toggle('hidden', !isDark);
+        $iconLight.classList.toggle('hidden', isDark);
+        localStorage.setItem('theme', isDark ? 'dark' : 'light');
+      });
+    }
+
+    /* ========================== Firebase (Realtime Data) ========================== */
+    // Ouve as mudanças no banco de dados em tempo real
+    function bindRealtime(){
+      if (!db) return; 
+
+      // Ouve mudanças nas configurações
+      onValue(ref(db, "settings"), (snap)=>{
+        const s = snap.val();
+        if (s) state.settings = {...state.settings, ...s};
+      });
+
+      // Ouve a FILA ATIVA (saidas)
+      onValue(ref(db, "saidas"), (snap)=>{
+        const data = snap.val() || {};
+        const allData = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        // Filtra alunos que foram marcados como "completed" (feitos pelo robô, mas ainda não movidos)
+        filaAtivaState = allData.filter(r => r.status !== 'completed');
+        
+        // Combina com o histórico que já temos no state
+        state.requests = [...filaAtivaState, ...historicoState]; // Junta os dois
+        renderSaidas();
+      });
+
+      // Ouve o HISTÓRICO (historicoSaidas)
+      onValue(ref(db, "historicoSaidas"), (snap)=>{
+        const data = snap.val() || {};
+        historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        
+        // Combina com a fila ativa que já temos no state
+        state.requests = [...filaAtivaState, ...historicoState]; // Junta os dois
+        renderSaidas();
+      });
+
+      // Ouve as equipes 5S
+      onValue(ref(db, "s5Teams"), (snap)=>{
+        const data = snap.val() || {};
+        state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        renderS5(); 
+      });
+    }
+
+    /* ========================== Renderização (Saídas) ========================== */
+    // Atualiza a tela de Saídas (fila e histórico)
+    function renderSaidas(){
+      if (!state.session || !state.session.displayName) {
+        return; // Não renderiza nada se não estiver logado
+      }
+      
+      const studentDisplayName = state.session.displayName; 
+      
+      // Filtra a fila ativa para apenas pendentes ou aprovados
+      const pendingAll = filaAtivaState.filter(r => r.status==="pending" || r.status==="approved");
+      
+      // Ordena pela ordem definida (ou pelo tempo de requisição)
+      pendingAll.sort((a, b) => {
+          const orderA = a.order !== undefined ? a.order : new Date(a.requestTime).getTime();
+          const orderB = b.order !== undefined ? b.order : new Date(a.requestTime).getTime();
+          return orderA - orderB;
+      });
+
+      const historyQuery = ($("#hist-search").value||"").toLowerCase();
+      // Filtra o histórico apenas para este aluno e para a busca
+      const history = historicoState.filter(r => 
+          r.userName === studentDisplayName && 
+          (r.status==="completed" || r.status==="rejected") &&
+          (r.reason?.toLowerCase().includes(historyQuery) ||
+           new Date(r.requestTime).toLocaleDateString("pt-BR").includes(historyQuery))
+      );
+      
+      $("#pending-count").textContent = pendingAll.length.toString();
+
+      // Renderiza a Fila
+      const pList = $("#pending-list");
+      pList.innerHTML = "";
+      if(pendingAll.length===0){
+        pList.innerHTML = `<li class="text-sm opacity-70 italic">Ninguém na fila agora.</li>`;
+      }
+      const now = Date.now();
+
+      // Encontra o pedido ATUAL do aluno
+      const myRequest = filaAtivaState.find(r => 
+          r.userName === studentDisplayName && (r.status === 'pending' || r.status === 'approved')
+      );
+      
+      const $requestBox = $("#request-box");
+      const $statusOverlay = $("#status-overlay");
+      const $btnChegou = $("#btn-chegou");
+      
+      if (myRequest) {
+        $requestBox.classList.add('hidden'); // Esconde o botão de "Pedir"
+        if (myRequest.status === 'approved') {
+          // Se está aprovado, mostra a tela "LIBERADO"
+          $statusOverlay.classList.remove('hidden');
+          $statusOverlay.classList.add('flex');
+          // Habilita o botão 'cheguei'
+          $btnChegou.disabled = !!myRequest.chegadaPendente; 
+          $btnChegou.textContent = myRequest.chegadaPendente ? "Processando..." : "Cheguei";
+
+        } else {
+          // Se está pendente, esconde a tela "LIBERADO"
+          $statusOverlay.classList.add('hidden');
+          $statusOverlay.classList.remove('flex');
+        }
+      } else {
+        // Se não tem pedido, mostra o botão de "Pedir"
+        $requestBox.classList.remove('hidden');
+        $statusOverlay.classList.add('hidden');
+        $statusOverlay.classList.remove('flex');
+      }
+
+      // Cria os itens da fila
+      pendingAll.forEach(req => {
+        const isApproved = req.status === "approved";
+        const isMyRequest = (req.userName === studentDisplayName);
+        
+        const li = document.createElement("li");
+        li.className = isApproved ? "approved-item" : "pending-item";
+        li.dataset.liId = req.id;
+
+        if (isMyRequest) {
+            li.classList.add("my-request"); // Adiciona destaque
+        }
+
+        const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
+        const left = document.createElement("div");
+        
+        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
+        const displayName = isMyRequest ? `${req.userName} (Você)` : req.userName;
+        
+        left.innerHTML = `<b>${displayName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
+                          <div class="text-xs mt-0.5">` +
+                          (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
+                                      : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
+                        + `</div>`;
+        
+        const right = document.createElement("div");
+        right.className = "flex items-center gap-2";
+        
+        if (isMyRequest && !isApproved){
+          right.innerHTML = `<span class="text-xs font-bold text-amber-600 dark:text-amber-400">AGUARDANDO</span>`;
+        } else if (isApproved && isMyRequest) {
+          right.innerHTML = `<span class="text-xs font-bold text-emerald-600">FORA DA SALA</span>`;
+        } else {
+          right.innerHTML = ``; // Outros alunos não têm botões
+        }
+
+        li.append(left, right);
+        pList.appendChild(li);
+      });
+
+      // Renderiza o Histórico
+      const histBox = $("#history");
+      histBox.innerHTML = "";
+      
+      // Agrupa o histórico por dia
+      const byDay = {};
+      history.forEach(r=>{
+        const d = new Date(r.requestTime||r.departureTime||Date.now());
+        const key = d.toLocaleDateString("pt-BR");
+        (byDay[key] ||= []).push(r);
+      });
+      
+      // Ordena os dias (mais recente primeiro)
+      const days = Object.keys(byDay).sort((a,b)=>{
+        const da = new Date(a.split("/").reverse().join("-"));
+        const db = new Date(b.split("/").reverse().join("-"));
+        return db-da;
+      });
+      
+      if (days.length===0){
+        histBox.innerHTML = `<div class="text-sm opacity-70 italic">Seu histórico está vazio${historyQuery ? ' para este filtro' : ''}.</div>`;
+      }
+      
+      // Cria os itens do histórico
+      days.forEach(day=>{
+        const hdr = document.createElement("div");
+        hdr.className = "rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 px-3 py-2 font-extrabold flex items-center justify-between cursor-pointer";
+        hdr.textContent = day;
+        hdr.dataset.day = day;
+        const caret = document.createElement("span"); caret.textContent = "▼"; caret.className = "transition-transform"; hdr.append(caret);
+        const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2";
+
+        byDay[day].sort((a,b)=>(new Date(b.requestTime||b.departureTime))-(new Date(a.requestTime||a.departureTime))).forEach(r=>{
+          const li = document.createElement("li");
+          li.className = "flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/40 py-1";
+          const t1 = r.requestTime ? new Date(r.requestTime).toLocaleTimeString("pt-BR") : "";
+          const t_dep = r.departureTime ? new Date(r.departureTime).toLocaleTimeString("pt-BR") : "";
+          const t_ret = r.returnTime ? new Date(r.returnTime).toLocaleTimeString("pt-BR") : "";
+          
+          const status = r.status==="completed" ? "Finalizado" : (r.status === "rejected" ? "Recusado/Cancelado" : "Pendente");
+          const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
+          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
+
+          li.innerHTML = `<div class="min-w-0 truncate">
+                            <b class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</b>
+                            <br><span class="text-xs opacity-80">Motivo: ${reason}</span>
+                            <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
+                          </div>
+                          <div class="flex gap-1">
+                          </div>`;
+          list.appendChild(li);
+        });
+        histBox.append(hdr, list);
+      });
+    }
+
+    /* ========================== Renderização (5S) ========================== */
+    function renderS5(){
+      const ul = $("#s5-list");
+      ul.innerHTML = "";
+      if (state.s5Teams.length===0){
+        ul.innerHTML = `<li class="text-sm opacity-70 italic">Nenhuma equipe 5S registrada.</li>`;
+        return;
+      }
+      
+      state.s5Teams.sort((a,b) => new Date(b.registrationTime) - new Date(a.registrationTime));
+      
+      state.s5Teams.forEach(team=>{
+        const li = document.createElement("li");
+        
+        li.className = `flex items-center justify-between rounded-xl p-3 border ${team.isCompleted?'bg-emerald-50 border-emerald-400':'bg-rose-50 border-rose-400'} dark:border-transparent dark:${team.isCompleted?'bg-emerald-900/20':'bg-rose-900/20'}`;
+        
+        const list = [team.person1,team.person2,team.person3,team.person4].filter(Boolean).join(", ");
+        const label = document.createElement("div");
+        const reg = new Date(team.registrationTime||Date.now()).toLocaleDateString("pt-BR");
+        
+        label.innerHTML = `<div class="font-extrabold">${reg} — ${team.shift}</div><div class="text-sm opacity-80">${list}</div>`;
+        
+        const right = document.createElement("div");
+        right.className = "flex items-center gap-2";
+        
+        const statusBadge = document.createElement("span");
+        statusBadge.className = `text-xs font-bold px-2 py-1 rounded-full ${team.isCompleted ? 'bg-emerald-200 text-emerald-800' : 'bg-rose-200 text-rose-800'}`;
+        statusBadge.textContent = team.isCompleted ? "COMPLETO" : "PENDENTE";
+        
+        right.append(statusBadge);
+        li.append(label,right);
+        ul.appendChild(li);
+      });
+    }
+
+    /* ========================== Ações (Saídas) ========================== */
+    
+    // Aluno pede para sair
+    function addStudent(){
+      const studentSession = state.session;
+      if (!studentSession) return toast("Sessão expirada. Faça login novamente.", "error");
+
+      const studentDisplayName = studentSession.displayName; 
+
+      // Verifica se o aluno já está na fila
+      const alreadyInQueue = filaAtivaState.some(r => 
+        r.userName === studentDisplayName && (r.status === 'pending' || r.status === 'approved')
+      );
+
+      if (alreadyInQueue) {
+        return toast("Você já está na fila ou aguardando retorno.", "error");
+      }
+      
+      const payload = {
+        userName: studentDisplayName, 
+        status: "pending",
+        requestTime: new Date().toISOString(),
+        order: Date.now() // Define uma ordem inicial (baseada no tempo)
+      };
+
+      // Envia o pedido para o Firebase
+      push(ref(db, "saidas"), payload).then(()=>{
+        toast(`Você foi adicionado à fila.`, "ok");
+      }).catch((err) => {
+        toast("Erro ao enviar pedido. Verifique sua conexão.", "error");
+      });
+    }
+
+    // Aluno clica em "Cheguei"
+    async function studentArrived() {
+      if (!state.session) return toast("Sessão expirada.", "error");
+
+      const studentDisplayName = state.session.displayName;
+      
+      // Encontra o pedido APROVADO do aluno atual
+      const myRequest = filaAtivaState.find(r => 
+          r.userName === studentDisplayName && r.status === 'approved'
+      );
+
+      if (!myRequest) {
+        return toast("Erro: Pedido de saída não encontrado ou não aprovado.", "error");
+      }
+      
+      if (myRequest.chegadaPendente) {
+        return; // Já clicou, está processando
+      }
+
+      const myId = myRequest.id;
+      const $btnChegou = $("#btn-chegou");
+
+      // Desabilita o botão e marca no DB que a chegada está pendente
+      // Isso "levanta a mão" para o admin (ou robô) processar o retorno
+      try {
+        $btnChegou.disabled = true;
+        $btnChegou.textContent = "Processando...";
+        
+        await update(ref(db, `saidas/${myId}`), { 
+          chegadaPendente: true, // Avisa o Admin/Robô
+          returnTime: new Date().toISOString() // Salva a hora que o aluno *clicou*
+        });
+        
+        toast("Retorno registrado. Aguardando processamento...", "ok");
+        // O admin.html (ou o robô) agora vai assumir
+        
+      } catch (e) {
+        toast("Erro ao registrar retorno. Tente novamente.", "error");
+        $btnChegou.disabled = false;
+        $btnChegou.textContent = "Cheguei";
+        console.error("Erro ao marcar chegadaPendente:", e);
+      }
+    }
+
+
+    /* ========================== Relógio e Alertas da Fila ========================== */
+    function startClock(){
+      if (state.timers.clock) clearInterval(state.timers.clock);
+      if (state.timers.alert) clearInterval(state.timers.alert);
+      state.timers.alert = null; 
+
+      state.timers.clock = setInterval(()=>{
+        const now = Date.now();
+        $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", {hour12:false});
+        
+        let shouldBeep = false;
+        const { alertLevels, persistentAlarmMinutes } = state.settings;
+
+        // Itera sobre a fila ativa para atualizar tempos e alarmes
+        filaAtivaState.forEach(r=>{
+          const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`);
+
+          if (r.status==="pending"){
+            // Atualiza o tempo de espera
+            const durEl = document.querySelector(`[data-dur="${r.id}-wait"]`);
+            if (durEl) durEl.textContent = fmtDur(now - new Date(r.requestTime));
+          
+          } else if (r.status==="approved"){
+            // Atualiza o tempo decorrido
+            const durEl = document.querySelector(`[data-dur="${r.id}-out"]`);
+            if (!r.departureTime) return;
+            
+            const departureTime = new Date(r.departureTime).getTime();
+            const elapsedMs = now - departureTime;
+            if (durEl) durEl.textContent = fmtDur(elapsedMs);
+
+            // Adiciona classes de alarme visual
+            const elapsedMinutes = elapsedMs / 60000;
+            let alertClass = '';
+            if (elapsedMinutes >= alertLevels[0] && elapsedMinutes < alertLevels[1]) alertClass = 'alarm-level-1';
+            else if (elapsedMinutes >= alertLevels[1] && elapsedMinutes < alertLevels[2]) alertClass = 'alarm-level-2';
+            else if (elapsedMinutes >= alertLevels[2] && elapsedMinutes < alertLevels[3]) alertClass = 'alarm-level-3';
+            else if (elapsedMinutes >= alertLevels[3]) alertClass = 'alarm-level-4'; 
+
+            if (el) {
+                el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
+                if(alertClass) el.classList.add(alertClass);
+            }
+            
+            // Verifica se deve tocar o alarme sonoro
+            if (elapsedMinutes >= persistentAlarmMinutes) {
+              if (!state.alarmingStudents.has(r.id)) {
+                state.alarmingStudents.add(r.id);
+                shouldBeep = true; 
+              }
+            } else {
+              if (state.alarmingStudents.has(r.id)) {
+                  state.alarmingStudents.delete(r.id);
+              }
+            }
+          } else {
+             // Limpa alarmes se o status não for pendente/aprovado
+             if (state.alarmingStudents.has(r.id)) {
+                state.alarmingStudents.delete(r.id);
+             }
+             if (el) {
+                el.classList.remove('alarm-level-1', 'alarm-level-2', 'alarm-level-3', 'alarm-level-4');
+             }
+          }
+        });
+
+        if (shouldBeep) {
+            playBeep();
+        }
+
+      }, 1000); // Roda a cada segundo
+
+      // Timer separado para o bipe contínuo (a cada 5s)
+      state.timers.alert = setInterval(() => {
+        if (state.alarmingStudents.size > 0 && state.alarmOn) {
+            playBeep(); 
+        }
+      }, 5000); 
+    }
+
+
+    /* ========================== Event Listeners (Ouvintes de Eventos) ========================== */
+    
+    // Ativa uma aba de navegação
+    function activateTab(id){
+      $$(".tab-btn").forEach(b=>b.classList.remove("active"));
+      $$("div[id^='tab-']").forEach(c=>c.classList.add("hidden"));
+      
+      $(`[data-tab="${id}"]`).classList.add("active");
+      $(`#tab-${id}`).classList.remove("hidden");
+    }
+
+    // Conecta todos os eventos da página
+    function bindEvents(){
+      // Inicializa o áudio no primeiro clique/interação
+      document.body.addEventListener('click', initAudio, { once: true });
+      document.body.addEventListener('input', initAudio, { once: true });
+
+      // Botão "Pedir para Sair"
+      $("#btn-add").addEventListener("click", addStudent);
+      
+      // Botão "Cheguei"
+      $("#btn-chegou").addEventListener("click", studentArrived);
+
+      // (Nenhum botão de ação na lista de alunos)
+      $("#pending-list").addEventListener("click", (e)=>{ });
+      
+      // Expandir/Recolher Histórico
+      $("#history").addEventListener("click", (e)=>{
+        const hdr = e.target.closest("div[data-day]");
+        if(hdr) {
+          const list = hdr.nextElementSibling;
+          if(list) list.classList.toggle("hidden");
+          const caret = hdr.querySelector("span");
+          if(caret) caret.classList.toggle("rotate-180");
+        }
+      });
+      
+      // Filtro do Histórico
+      $("#hist-search").addEventListener("input", renderSaidas);
+      
+      // Abas (Saídas, 5S)
+      $$(".tab-btn").forEach(b=> b.addEventListener("click", ()=> activateTab(b.dataset.tab)));
+
+      // Botão de Login
+      $("#login-btn").addEventListener("click", ()=> {
+        initAudio(); // Garante que o áudio seja iniciado no login
+        login($("#login-user").value);
+      });
+      
+      // Botão "Sair" (Logout)
+      $("#logout-btn").addEventListener("click", logout);
+    }
+
+    /* ========================== Inicialização (Boot) ========================== */
+    // Função principal que inicia a aplicação
+    function boot(){
+      setupThemeToggle(); // Configura o botão de tema
+      
+      if (tryAutoLogin()) {
+        // Se fez auto-login, atualiza a UI e o status online no Firebase
+        $("#student-name-display").textContent = state.session.displayName.split(" ")[0];
+        
+        const userRef = ref(db, `users/${state.session.userKey}`);
+        set(userRef, { 
+          lastSeen: new Date().toISOString(),
+          displayName: state.session.displayName
+        });
+        // Marca como offline se a conexão cair
+        onDisconnect(userRef).set({ lastSeen: new Date(0).toISOString() });
+        
+      } else {
+        // Se não conseguiu auto-login, mostra a tela de login
+        showLogin(true); 
+      }
+      
+      bindEvents(); // Conecta os eventos
+      bindRealtime(); // Ouve o Firebase
+      startClock(); // Inicia o relógio e os timers
+      activateTab("saidas"); // Ativa a aba principal
+    }
+
+    // Inicia a aplicação
+    boot();
+  </script>
+</body>
+</html>
