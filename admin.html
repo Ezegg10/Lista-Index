@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -211,8 +210,6 @@
             </div>
           </div>
           
-          <!-- *** PAINEL DE WC REMOVIDO *** -->
-
           <div class="mt-6">
             <h3 class="section-title">Adicionar Aluno à Fila de Espera</h3>
             <div class="flex gap-2">
@@ -299,7 +296,6 @@
     });
   </script>
 
-  <!-- Imports do Firebase (Database E Auth) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
     import { getDatabase, ref, set, get, onValue, push, update, remove, off, onDisconnect } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-database.js";
@@ -307,14 +303,15 @@
 
     /* ========================== Firebase init ========================== */
     const firebaseConfig = {
-      apiKey: "AIzaSyBl8K0WVSDtGsgJygr3yCSsQ_voywnm114",
-      authDomain: "gerenciador-saidas-5s-e4c58.firebaseapp.com",
-      databaseURL: "https://gerenciador-saidas-5s-e4c58-default-rtdb.firebaseio.com",
-      projectId: "gerenciador-saidas-5s-e4c58",
-      storageBucket: "gerenciador-saidas-5s-e4c58.firebasestorage.app",
-      messagingSenderId: "990056306037",
-      appId: "1:990056306037:web:7bb1f8b8247631acb3af3c",
-      measurementId: "G-0ZFEQRYPQT"
+      // (Use suas chaves originais aqui)
+      apiKey: "[SUA_API_KEY]",
+      authDomain: "[SEU_AUTH_DOMAIN]",
+      databaseURL: "[SEU_DATABASE_URL]",
+      projectId: "[SEU_PROJECT_ID]",
+      storageBucket: "[SEU_STORAGE_BUCKET]",
+      messagingSenderId: "[SEU_SENDER_ID]",
+      appId: "[SEU_APP_ID]",
+      measurementId: "[SEU_MEASUREMENT_ID]"
     };
 
     let app, db, auth;
@@ -917,7 +914,6 @@
             <option value="rejected" ${req.status === 'rejected' ? 'selected' : ''}>Rejeitado</option>
           </select>
         </div>
-        <!-- Campos de WC Removidos -->
         <div class="field"><label>1. Pedido</label><input id="edit-request-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.requestTime)}"></div>
         <div class="field"><label>2. Saída</label><input id="edit-departure-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.departureTime)}"></div>
         <div class="field"><label>3. Retorno</label><input id="edit-return-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.returnTime)}"></div>
@@ -1378,8 +1374,8 @@
         } else {
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          // *** CORREÇÃO: "admin.html" (minúsculo) para "Login.html" (maiúsculo) ***
-          window.location.href = window.location.href.replace("admin.html", "login.html"); 
+          // *** CORREÇÃO: Redirecionamento direto para Login.html ***
+          window.location.href = "./Login.html"; 
         }
       });
     }
@@ -1389,4 +1385,3 @@
   </script>
 </body>
 </html>
-
