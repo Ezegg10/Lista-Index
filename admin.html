@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
@@ -110,12 +111,20 @@
       animation: pulse-red 1.5s infinite; 
       border-color: #ef4444;
     }
+
+    /* Estilo do Toggle Switch */
+    .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 28px; }
+    .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+    input:checked + .slider { background-color: #2563eb; }
+    input:checked + .slider:before { transform: translateX(22px); }
+
+    /* *** ESTILOS DE WC REMOVIDOS *** */
   </style>
 
 </head>
 <body class="font-inter bg-slate-100 dark:bg-slate-900 text-slate-800 dark:text-slate-100 transition-colors duration-300">
-
-  <!-- ECRÃ DE LOGIN REMOVIDO DESTE FICHEIRO -->
 
   <div id="modal-overlay" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/60 p-4">
     <div class="w-full max-w-md rounded-2xl bg-white dark:bg-slate-800 shadow-soft p-6">
@@ -185,13 +194,24 @@
 
       <section class="space-y-6">
         <div id="tab-saidas" class="card">
-          <div class="flex items-center justify-between gap-4">
+          <div class="flex items-center justify-between gap-4 flex-wrap">
             <div>
               <h2 class="text-xl font-bold">Painel de Controle</h2>
               <p class="text-sm opacity-70">Horário de Brasília</p>
             </div>
-            <div id="alarm-pill" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 cursor-pointer transition-colors" title="Clique para ligar/desligar o alarme sonoro">ALARME: LIGADO</div>
+            <div class="flex items-center gap-4">
+              <div class="flex items-center gap-2" title="Liga/Desliga a liberação automática do próximo aluno">
+                <span class="text-sm font-bold">Robô:</span>
+                <label class="switch">
+                  <input type="checkbox" id="toggle-robo">
+                  <span class="slider"></span>
+                </label>
+              </div>
+              <div id="alarm-pill" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-200 text-emerald-800 dark:bg-emerald-800 dark:text-emerald-200 cursor-pointer transition-colors" title="Clique para ligar/desligar o alarme sonoro">ALARME: LIGADO</div>
+            </div>
           </div>
+          
+          <!-- *** PAINEL DE WC REMOVIDO *** -->
 
           <div class="mt-6">
             <h3 class="section-title">Adicionar Aluno à Fila de Espera</h3>
@@ -246,7 +266,10 @@
             <div class="field sm:col-span-2">
               <label>Alarme Contínuo (min)</label><input id="alP" type="number" class="input" min="1">
             </div>
-            <div class="field sm:col-span-2">
+            <div class="field">
+              <label>Limite de Saídas (Robô)</label><input id="robo-limit" type="number" class="input" min="1">
+            </div>
+            <div class="field">
               <label>Motivo Padrão</label><input id="def-reason" class="input">
             </div>
             <button id="btn-save-settings" class="btn-primary sm:col-span-2">Salvar Configurações</button>
@@ -257,24 +280,22 @@
 
     <div id="toast" class="fixed bottom-4 right-4 hidden"></div>
 
-    <!-- Botão Flutuante (FAB) do Link -->
     <a id="fab-form-link" 
        href="https://forms.gle/HJLqG9VJWkmg3c9R6" 
        target="_blank" 
        rel="noopener noreferrer"
        class="fixed bottom-6 right-6 z-40 btn-primary rounded-full p-4 shadow-lg"
        title="Abrir Formulário de Feedback">
-      <!-- Ícone de "Formulário" (Clipboard List) -->
       <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002 2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
       </svg>
     </a>
   </div>
 
   <script>
-    // Reveal after JS initialization starts
     window.addEventListener('load', () => {
-      // O script de boot() agora controla a opacidade
+      document.documentElement.style.opacity = "1";
+      document.getElementById('app').classList.remove('opacity-0');
     });
   </script>
 
@@ -299,15 +320,18 @@
     let app, db, auth;
     app = initializeApp(firebaseConfig);
     db = getDatabase(app);
-    auth = getAuth(app); // Inicializa o Auth
+    auth = getAuth(app);
     
     /* ========================== State ========================== */
     const state = {
-      session: null, // Mudará para 'true' se o login for válido
+      session: null, 
       settings: {
         alertLevels: [6,10,15,20],
         persistentAlarmMinutes: 25,
-        defaultReason: "Banheiro"
+        defaultReason: "Saída Padrão", // Motivo alterado
+        isRoboActive: false,
+        roboLimit: 2, 
+        // wcStatus removido
       },
       requests: [], 
       s5Teams: [],
@@ -319,6 +343,8 @@
       alarmLevelsCache: {},
       timers: { clock:null, alert:null },
       editingItemId: null,
+      
+      isRoboProcessing: false 
     };
     
     let filaAtivaState = [];
@@ -327,7 +353,7 @@
     /* ========================== Utils ========================== */
     const $ = (sel) => document.querySelector(sel);
     const $$ = (sel) => [...document.querySelectorAll(sel)];
-    // ... (todas as outras funções utilitárias: fmtDur, cleanName, formatDateTimeLocal, parseDateTimeLocal, toast)
+    
     const fmtDur = (ms)=>{
       if (isNaN(ms) || ms < 0) return "0m 0s";
       const s = Math.floor(ms/1000);
@@ -359,7 +385,6 @@
       try {
         state.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         state.audioInitialized = true;
-        console.log("AudioContext inicializado.");
       } catch (e) {
         console.error("AudioContext não suportado.", e);
       }
@@ -429,14 +454,11 @@
       });
     }
 
-    /* ========================== Login / Logout (CORRIGIDO) ========================== */
+    /* ========================== Login / Logout ========================== */
     
-    // REMOVIDO: tryAutoLogin() e const USERS
-    
-    // Função de Logout agora usa Firebase Auth
     async function logout(){
       try {
-        await signOut(auth); // O onAuthStateChanged vai tratar do redirecionamento
+        await signOut(auth);
         toast("Sessão terminada.", "ok");
       } catch (error) {
         console.error("Erro ao sair:", error);
@@ -444,10 +466,102 @@
     }
     
     /* ========================== Data bindings ========================== */
+    
+    // *** O ROBÔ AUTOMÁTICO (SIMPLIFICADO) ***
+    async function processAutoQueue() {
+      if (state.isRoboProcessing || !state.settings.isRoboActive) return;
+      
+      state.isRoboProcessing = true;
+      
+      const filaSnapshot = await get(ref(db, "saidas"));
+      const currentQueue = Object.entries(filaSnapshot.val() || {}).map(([id, v]) => ({ id, ...v }));
+
+      const updates = {};
+
+      // --- 1. PROCESSAR CHEGADAS ---
+      const arrivingStudents = currentQueue.filter(r => r.chegadaPendente === true && r.status === 'approved');
+
+      for (const req of arrivingStudents) {
+        console.log(`ROBÔ: Processando chegada de ${req.userName}`);
+        const historicoEntry = {
+          ...req,
+          status: "completed",
+          chegadaPendente: null, 
+        };
+        updates[`historicoSaidas/${req.id}`] = historicoEntry;
+        updates[`saidas/${req.id}`] = null;
+        
+        // Lógica de WC removida
+      }
+
+      // --- 2. PROCESSAR SAÍDAS (LIBERAÇÕES) ---
+      
+      const studentsOut = currentQueue.filter(r => 
+        r.status === 'approved' && !r.chegadaPendente
+      ).length;
+      
+      let vagasAbertas = state.settings.roboLimit - studentsOut;
+      
+      if (vagasAbertas > 0) {
+        // Lógica de WC removida
+        
+        const pendingStudents = currentQueue
+          .filter(r => r.status === 'pending')
+          .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+        let i = 0;
+        // Libera alunos até o limite de vagas
+        while (i < pendingStudents.length && vagasAbertas > 0) {
+          const nextStudent = pendingStudents[i];
+
+          console.log(`ROBÔ: Liberando ${nextStudent.userName}`);
+
+          updates[`saidas/${nextStudent.id}`] = {
+            ...nextStudent,
+            status: "approved",
+            departureTime: new Date().toISOString(),
+            reason: state.settings.defaultReason || "Saída Padrão",
+            assignedWc: null // Removido
+          };
+
+          // Lógica de WC removida
+          vagasAbertas--;
+          i++;
+        }
+      }
+
+      // --- 3. EXECUTAR ATUALIZAÇÕES ---
+      
+      // Lógica de WC removida
+
+      if (Object.keys(updates).length > 0) {
+        try {
+          await update(ref(db), updates);
+          console.log("ROBÔ: Atualizações concluídas.");
+        } catch (e) {
+          console.error("Erro no robô automático:", e);
+          toast("Erro no robô automático.", "error");
+        }
+      }
+
+      state.isRoboProcessing = false;
+    }
+
+    // *** Função renderWcStatus REMOVIDA ***
+
     function bindRealtime(){
       onValue(ref(db, "settings"), (snap)=>{
         const s = snap.val();
-        if (s) state.settings = {...state.settings, ...s};
+        if (s) {
+          state.settings = {...state.settings, ...s};
+          state.settings.isRoboActive = !!s.isRoboActive;
+          state.settings.roboLimit = s.roboLimit || 2;
+          // wcStatus removido
+          
+          $("#toggle-robo").checked = state.settings.isRoboActive;
+          $("#robo-limit").value = state.settings.roboLimit;
+          // renderWcStatus removido
+        }
         $("#al1").value = state.settings.alertLevels[0];
         $("#al2").value = state.settings.alertLevels[1];
         $("#al3").value = state.settings.alertLevels[2];
@@ -455,18 +569,32 @@
         $("#alP").value = state.settings.persistentAlarmMinutes;
         $("#def-reason").value = state.settings.defaultReason || "";
       });
+      
       onValue(ref(db, "saidas"), (snap)=>{
         const data = snap.val() || {};
-        filaAtivaState = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        const allDataList = Object.entries(data).map(([id, v])=> ({id, ...v}));
+        
+        if (state.settings.isRoboActive) {
+          processAutoQueue(); 
+        }
+        
+        if (state.settings.isRoboActive) {
+          filaAtivaState = allDataList.filter(r => r.status !== 'completed' && !r.chegadaPendente);
+        } else {
+          filaAtivaState = allDataList.filter(r => r.status !== 'completed'); 
+        }
+
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
+      
       onValue(ref(db, "historicoSaidas"), (snap)=>{
         const data = snap.val() || {};
         historicoState = Object.entries(data).map(([id, v])=> ({id, ...v}));
         state.requests = [...filaAtivaState, ...historicoState];
         renderSaidas();
       });
+      
       onValue(ref(db, "s5Teams"), (snap)=>{
         const data = snap.val() || {};
         state.s5Teams = Object.entries(data).map(([id, v])=> ({id, ...v}));
@@ -475,22 +603,28 @@
     }
 
     /* ========================== Render Saídas ========================== */
-    // ... (função renderSaidas() completa, sem alterações)
     function renderSaidas(){
-      const pendingAll = state.requests.filter(r => r.status==="pending" || r.status==="approved");
+      const pendingAll = filaAtivaState.filter(r => r.status==="pending" || r.status==="approved");
+      
       pendingAll.sort((a, b) => {
           const orderA = a.order !== undefined ? a.order : new Date(a.requestTime).getTime();
           const orderB = b.order !== undefined ? b.order : new Date(a.requestTime).getTime();
           return orderA - orderB;
       });
-      const history = state.requests.filter(r => r.status==="completed" || r.status==="rejected");
+      
+      const history = historicoState;
+      
       $("#pending-count").textContent = pendingAll.length.toString();
+      
       const pList = $("#pending-list");
       pList.innerHTML = "";
+      
       if(pendingAll.length===0){
         pList.innerHTML = `<li class="text-sm opacity-70 italic">Ninguém na fila agora.</li>`;
       }
+      
       const now = Date.now();
+      
       pendingAll.forEach(req => {
         const isApproved = req.status === "approved";
         const li = document.createElement("li");
@@ -498,30 +632,48 @@
         li.dataset.liId = req.id;
         li.draggable = true;
         li.dataset.dragId = req.id;
+        
         const timeStr = new Date(isApproved?req.departureTime:req.requestTime||Date.now()).toLocaleTimeString("pt-BR");
         const left = document.createElement("div");
-        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Banheiro") : "N/A");
+        const reason = req.reason || (isApproved ? (state.settings.defaultReason || "Saída Padrão") : "N/A");
+        
+        // wcLabel removido
+        
         left.innerHTML = `<b>${req.userName}</b> <span class="text-xs opacity-60 ml-1">(${timeStr})</span>
                           <div class="text-xs mt-0.5">` +
                           (isApproved ? `Motivo: ${reason} | Decorrido: <span data-dur="${req.id}-out">${fmtDur(now - new Date(req.departureTime))}</span>`
                                       : `Espera: <span data-dur="${req.id}-wait">${fmtDur(now - new Date(req.requestTime))}</span>`)
                         + `</div>`;
+        
         const right = document.createElement("div");
         right.className = "flex items-center gap-2";
+        
         if (!isApproved){
           right.innerHTML = `<button class="btn-primary" data-act="approve" data-id="${req.id}">Liberar</button>
-                             <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>`;
+                             <button class="btn-danger" data-act="reject" data-id="${req.id}">Recusar</button>
+                             <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
         } else {
-          right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>`;
+          if (req.chegadaPendente) {
+            // usedWcLabel removido
+            right.innerHTML = `<button class="btn-primary" data-act="return" data-id="${req.id}">Confirmar</button>
+                               <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
+            li.classList.add("animate-pulse");
+            li.style.borderColor = "#2563eb";
+            li.style.borderWidth = "2px";
+          } else {
+            right.innerHTML = `<button class="btn-secondary" data-act="return" data-id="${req.id}">Chegou</button>
+                               <button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>`;
+          }
         }
-        right.innerHTML += `<button class="btn-icon" data-act="edit-saida" data-id="${req.id}">✏️</button>
-                            <button class="btn-icon" data-act="del-saida" data-id="${req.id}">🗑</button>`;
+        
         li.append(left, right);
         pList.appendChild(li);
       });
+      
       const histBox = $("#history");
       histBox.innerHTML = "";
       const query = ($("#hist-search").value||"").toLowerCase();
+      
       const byDay = {};
       history.forEach(r=>{
         if (query && !r.userName.toLowerCase().includes(query)) return;
@@ -529,14 +681,17 @@
         const key = d.toLocaleDateString("pt-BR");
         (byDay[key] ||= []).push(r);
       });
+      
       const days = Object.keys(byDay).sort((a,b)=>{
         const da = new Date(a.split("/").reverse().join("-"));
         const db = new Date(b.split("/").reverse().join("-"));
         return db-da;
       });
+      
       if (days.length===0){
         histBox.innerHTML = `<div class="text-sm opacity-70 italic">Histórico vazio.</div>`;
       }
+      
       days.forEach(day=>{
         const hdr = document.createElement("div");
         hdr.className = "rounded-xl bg-indigo-100 dark:bg-indigo-900/30 text-indigo-800 dark:text-indigo-200 px-3 py-2 font-extrabold flex items-center justify-between cursor-pointer";
@@ -544,6 +699,7 @@
         hdr.dataset.day = day; 
         const caret = document.createElement("span"); caret.textContent = "▼"; caret.className = "transition-transform"; hdr.append(caret);
         const list = document.createElement("ul"); list.className="grid gap-1 bg-white dark:bg-slate-800 rounded-b-xl p-2 hidden";
+        
         byDay[day].sort((a,b)=>(new Date(b.requestTime||b.departureTime))-(new Date(a.requestTime||a.departureTime))).forEach(r=>{
           const li = document.createElement("li");
           li.className = "flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/40 py-1";
@@ -552,7 +708,10 @@
           const t_ret = r.returnTime ? new Date(r.returnTime).toLocaleTimeString("pt-BR") : "";
           const status = r.status==="completed" ? "Liberado" : (r.status === "rejected" ? "Recusado" : "Pendente");
           const dur = (r.returnTime && r.departureTime) ? ` (${fmtDur(new Date(r.returnTime)-new Date(r.departureTime))})` : "";
-          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Banheiro') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
+          const reason = r.reason || (r.status === 'completed' ? (state.settings.defaultReason || 'Saída Padrão') : (r.status === 'rejected' ? 'Recusado/Cancelado' : 'N/A'));
+          
+          // wcLabel removido
+          
           li.innerHTML = `<div class="min-w-0 truncate">
                             <b>${r.userName}</b> — <span class="${r.status==='completed'?'text-emerald-600':'text-rose-600'} font-bold">${status}</span>
                             <br><span class="text-xs opacity-70">Solicitado: ${t1} ${r.departureTime ? `| Saída: ${t_dep}` : ''} ${r.returnTime ? `| Retorno: ${t_ret}` : ''} ${dur}</span>
@@ -569,8 +728,8 @@
     }
 
     /* ========================== Render S5 ========================== */
-    // ... (função renderS5() completa, sem alterações)
     function renderS5(){
+      // ... (código S5 sem alterações)
       const ul = $("#s5-list");
       ul.innerHTML = "";
       if (state.s5Teams.length===0){
@@ -606,15 +765,13 @@
     }
 
     /* ========================== Actions (Saídas) ========================== */
-    // ... (todas as funções de Ações de Saída, S5, Settings, Backup, Clock permanecem as mesmas)
-    // (addStudent, updateQueueOrder, approve, reject, arrived, removeReq, openEditSaidaModal, saveSaida)
-    // (addS5Team, removeS5Team, openEditS5Modal, saveS5Team)
-    // (saveSettings, downloadBackup, uploadBackup, resetAll, startClock)
     
-    // (Funções de Saídas - idênticas à versão anterior)
     function addStudent(){
       const name = cleanName($("#input-name").value);
       if (!name) return toast("Digite o nome do aluno.", "error");
+      
+      // Verificação de WC removida
+      
       const payload = {
         userName: name,
         status: "pending",
@@ -624,8 +781,10 @@
       push(ref(db, "saidas"), payload).then(()=>{
         $("#input-name").value = "";
         toast(`"${name}" adicionado à fila.`, "ok");
+        if (state.settings.isRoboActive) processAutoQueue();
       });
     }
+    
     function updateQueueOrder() {
         const updates = {};
         const items = $$("#pending-list li[data-drag-id]");
@@ -642,13 +801,30 @@
             });
         }
     }
+    
+    // *** MODIFICADO: Aprovar Manual (sem WC) ***
     function approve(id){
-      update(ref(db, "saidas/"+id), {
+      // Lógica de WC removida
+      
+      const updates = {};
+      
+      const req = filaAtivaState.find(r => r.id === id);
+      if (!req) return toast("Erro: Registro não encontrado.", "error");
+      
+      updates[`saidas/${id}`] = {
+        ...req,
         status: "approved",
         departureTime: new Date().toISOString(),
-        reason: state.settings.defaultReason || "Banheiro"
+        reason: state.settings.defaultReason || "Saída Padrão",
+        assignedWc: null // Removido
+      };
+      // Lógica de WC removida
+
+      update(ref(db), updates).catch(err => {
+        toast("Erro ao aprovar.", "error");
       });
     }
+    
     async function reject(id) {
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
@@ -668,23 +844,35 @@
         toast("Erro ao mover pedido.", "error");
       }
     }
+    
+    // *** MODIFICADO: "Chegou" manual (sem WC) ***
     async function arrived(id) {
       const req = filaAtivaState.find(r => r.id === id); 
       if (!req) return toast("Registro não encontrado", "error");
+      
       const historicoEntry = {
         ...req,
         status: "completed",
-        returnTime: new Date().toISOString()
+        returnTime: req.returnTime || new Date().toISOString(),
+        chegadaPendente: null
       };
+      
       const updates = {};
       updates[`historicoSaidas/${id}`] = historicoEntry;
       updates[`saidas/${id}`] = null;
+      
+      // Lógica de WC removida
+
       try {
         await update(ref(db), updates);
         toast("Aluno movido para o histórico.", "ok");
+        
+        if (state.settings.isRoboActive) processAutoQueue();
+        
       } catch (e) {
         toast("Erro ao mover aluno.", "error");
       }
+      
       if (state.alarmingStudents.has(id)) {
         state.alarmingStudents.delete(id);
       }
@@ -692,54 +880,83 @@
         delete state.alarmLevelsCache[id];
       }
     }
+    
     async function removeReq(id){
-      const ok = await confirmBox("Tem certeza que deseja excluir este registro de saída PERMANENTEMENTE?");
+      const ok = await confirmBox("Tem certeza que deseja excluir este registro PERMANENTEMENTE?");
       if (!ok) return;
-      const req = state.requests.find(r => r.id === id);
-      let path = `saidas/${id}`; 
-      if (req && (req.status === 'completed' || req.status === 'rejected')) {
-        path = `historicoSaidas/${id}`;
-      }
+      
+      const reqFila = filaAtivaState.find(r => r.id === id);
+      const reqHist = historicoState.find(r => r.id === id);
+      
+      let path = null;
+      if (reqFila) path = `saidas/${id}`;
+      else if (reqHist) path = `historicoSaidas/${id}`;
+
+      if (!path) return toast("Erro: Registro não encontrado.", "error");
+
       remove(ref(db, path)).then(() => {
         toast("Registro excluído.", "ok");
       }).catch(err => {
         toast("Erro ao excluir.", "error");
       });
     }
+
+    async function openEditSaidaModal(id) {
+      const req = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
+      if (!req) return toast("Registro não encontrado.", "error");
+
+      state.editingItemId = id;
+      const content = `
+        <div class="field"><label>Nome</label><input id="edit-saida-name" class="input" value="${req.userName}"></div>
+        <div class="field"><label>Motivo</label><input id="edit-saida-reason" class="input" value="${req.reason || ''}"></div>
+        <div class="field"><label>Status</label>
+          <select id="edit-saida-status" class="input">
+            <option value="pending" ${req.status === 'pending' ? 'selected' : ''}>Pendente</option>
+            <option value="approved" ${req.status === 'approved' ? 'selected' : ''}>Aprovado</option>
+            <option value="completed" ${req.status === 'completed' ? 'selected' : ''}>Concluído</option>
+            <option value="rejected" ${req.status === 'rejected' ? 'selected' : ''}>Rejeitado</option>
+          </select>
+        </div>
+        <!-- Campos de WC Removidos -->
+        <div class="field"><label>1. Pedido</label><input id="edit-request-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.requestTime)}"></div>
+        <div class="field"><label>2. Saída</label><input id="edit-departure-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.departureTime)}"></div>
+        <div class="field"><label>3. Retorno</label><input id="edit-return-time" type="datetime-local" class="input" value="${formatDateTimeLocal(req.returnTime)}"></div>
+      `;
+      openModal("Editar Registro de Saída", content, () => saveSaida(id));
+    }
+
     async function saveSaida(id) {
       const name = cleanName($("#edit-saida-name").value);
       const reason = ($("#edit-saida-reason").value || "").trim();
+      const newStatus = $("#edit-saida-status").value;
       const requestTime = parseDateTimeLocal($("#edit-request-time").value);
       const departureTime = parseDateTimeLocal($("#edit-departure-time").value);
       const returnTime = parseDateTimeLocal($("#edit-return-time").value);
+      // Campos de WC removidos
+      
       if (!name) return toast("O nome não pode ficar em branco.", "error");
+      
       const updatesPayload = {
         userName: name,
-        reason: reason || (state.settings.defaultReason || "Banheiro"),
-        requestTime: requestTime,
-        departureTime: departureTime,
-        returnTime: returnTime,
+        reason: reason || (state.settings.defaultReason || "Saída Padrão"),
+        status: newStatus,
+        requestTime: requestTime || null,
+        departureTime: departureTime || null,
+        returnTime: returnTime || null,
+        chegadaPendente: null,
+        assignedWc: null, // Removido
+        usedWc: null // Removido
       };
-      if (!requestTime) updatesPayload.requestTime = null;
-      if (!departureTime) updatesPayload.departureTime = null;
-      if (!returnTime) updatesPayload.returnTime = null;
-      const currentReq = state.requests.find(r => r.id === id);
+
+      const currentReq = filaAtivaState.find(r => r.id === id) || historicoState.find(r => r.id === id);
       if (!currentReq) return toast("Erro: Registro original não encontrado.", "error");
-      if (updatesPayload.returnTime) {
-          updatesPayload.status = "completed";
-      } else if (updatesPayload.departureTime) {
-          updatesPayload.status = "approved";
-      } else {
-          updatesPayload.status = "pending";
-      }
-      if (currentReq.status === 'rejected' && !updatesPayload.departureTime && !updatesPayload.returnTime) {
-          updatesPayload.status = "rejected";
-      }
+      
       const wasInHistory = currentReq.status === 'completed' || currentReq.status === 'rejected';
-      const newStatus = updatesPayload.status;
       const willBeInHistory = newStatus === 'completed' || newStatus === 'rejected';
+
       const updates = {};
-      const finalPayload = {...currentReq, ...updatesPayload};
+      const finalPayload = {...currentReq, ...updatesPayload}; 
+      
       if (wasInHistory && !willBeInHistory) {
           updates[`historicoSaidas/${id}`] = null;
           updates[`saidas/${id}`] = finalPayload; 
@@ -751,17 +968,20 @@
       } else {
           updates[`saidas/${id}`] = finalPayload;
       }
+      
       try {
         await update(ref(db), updates);
         toast("Registro atualizado!", "ok");
         closeModal();
       } catch (e) {
         toast("Erro ao atualizar.", "error");
+        console.error("Erro ao salvar saida:", e);
       }
     }
     
-    // (Funções de S5 - idênticas à versão anterior)
+    // (Funções S5)
     function addS5Team() {
+      // ... (código S5)
       const p = ["#s5-p1", "#s5-p2", "#s5-p3", "#s5-p4"].map(sel => cleanName($(sel).value));
       const payload = {
         person1: p[0] || "Vago",
@@ -778,12 +998,14 @@
       });
     }
     async function removeS5Team(id) {
+      // ... (código S5)
       const ok = await confirmBox("Tem certeza que deseja excluir esta equipe 5S?");
       if (!ok) return;
       remove(ref(db, "s5Teams/" + id));
       toast("Equipe excluída.", "ok");
     }
     function openEditS5Modal(id) {
+      // ... (código S5)
       const team = state.s5Teams.find(t => t.id === id);
       if (!team) return toast("Equipe não encontrada.", "error");
       state.editingItemId = id;
@@ -804,6 +1026,7 @@
       openModal("Editar Equipe 5S", content, () => saveS5Team(id));
     }
     function saveS5Team(id) {
+      // ... (código S5)
       const p = ["#edit-s5-p1", "#edit-s5-p2", "#edit-s5-p3", "#edit-s5-p4"].map(sel => cleanName($(sel).value));
       const payload = {
         person1: p[0] || "Vago",
@@ -817,22 +1040,34 @@
         closeModal();
       });
     }
+    
+    // *** MODIFICADO: Salva o limite do Robô (sem WC) ***
     function saveSettings(){
       const vals = [$("#al1").value,$("#al2").value,$("#al3").value,$("#al4").value].map(v=>parseInt(v,10));
       const pers = parseInt($("#alP").value,10);
-      if (vals.some(v=>!v||v<=0) || !pers || pers<=0){ return toast("Valores inválidos.", "error"); }
+      const roboLimit = parseInt($("#robo-limit").value, 10);
+      
+      if (vals.some(v=>!v||v<=0) || !pers || pers<=0 || !roboLimit || roboLimit <= 0){ 
+        return toast("Valores inválidos.", "error"); 
+      }
       for (let i=0;i<vals.length-1;i++){ if (vals[i] >= vals[i+1]) return toast("Alertas devem ser crescentes.", "error"); }
       if (vals[vals.length-1] >= pers) return toast("Alarme contínuo deve ser maior que o 4º alerta.", "error");
+      
       const payload = {
         alertLevels: vals,
         persistentAlarmMinutes: pers,
-        defaultReason: $("#def-reason").value || "Banheiro"
+        defaultReason: $("#def-reason").value || "Saída Padrão",
+        isRoboActive: state.settings.isRoboActive,
+        roboLimit: roboLimit,
+        // wcStatus removido
       };
+      
       set(ref(db, "settings"), payload).then(()=>toast("Configurações salvas!", "ok"));
     }
     
-    // (Funções de Backup/Reset - idênticas à versão anterior)
+    // (Backup/Reset)
     async function downloadBackup(){
+      // ... (código backup)
       const [saidasSnap, s5Snap, confSnap, historicoSnap, usersSnap] = await Promise.all([
         get(ref(db, "saidas")),
         get(ref(db, "s5Teams")),
@@ -856,6 +1091,7 @@
       URL.revokeObjectURL(a.href);
     }
     async function uploadBackup(file) {
+      // ... (código upload)
       try {
         const text = await file.text();
         const data = JSON.parse(text);
@@ -875,6 +1111,7 @@
       }
     }
     async function resetAll() {
+      // ... (código reset)
       const ok = await confirmBox("Resetar TUDO (saídas, histórico, 5S, usuários, configurações)?");
       if (!ok) return;
       await Promise.all([
@@ -887,8 +1124,9 @@
       toast("Tudo resetado.", "ok");
     }
     
-    // (Função startClock - idêntica à versão anterior)
+    // (startClock)
     function startClock(){
+      // ... (código relógio)
       if (state.timers.clock) clearInterval(state.timers.clock);
       if (state.timers.alert) clearInterval(state.timers.alert);
       state.timers.alert = null;
@@ -897,6 +1135,7 @@
         $("#clock").textContent = new Date().toLocaleTimeString("pt-BR", { hour12: false });
         let shouldBeep = false;
         const { alertLevels, persistentAlarmMinutes } = state.settings;
+        
         filaAtivaState.forEach(r => {
           const el = document.querySelector(`#pending-list [data-li-id="${r.id}"]`);
           const currentVisualLevel = state.alarmLevelsCache[r.id] || 0;
@@ -963,10 +1202,16 @@
       if ($tab) $tab.classList.remove("hidden");
     }
 
+    // *** Função toggleWcStatus REMOVIDA ***
+
     function bindEvents() {
       document.body.addEventListener('click', initAudio, { once: true });
       document.body.addEventListener('input', initAudio, { once: true });
+      
       $("#btn-add").addEventListener("click", addStudent);
+      
+      // *** Eventos de WC REMOVIDOS ***
+
       const pList = $("#pending-list");
       pList.addEventListener("click", (e) => {
         const btn = e.target.closest("button[data-act]");
@@ -975,10 +1220,10 @@
         if (act === "approve") approve(id);
         if (act === "reject") reject(id);
         if (act === "return") arrived(id);
-        if (act === "del-saida") removeReq(id);
         if (act === "edit-saida") openEditSaidaModal(id);
       });
-      // ... (Eventos de Drag-n-Drop - idênticos)
+      
+      // (Drag-n-Drop)
       let dragSrcId = null;
       function cleanupDragStyles() {
         $$('#pending-list li').forEach(li => {
@@ -987,6 +1232,7 @@
         dragSrcId = null;
       }
       pList.addEventListener("dragstart", (e) => {
+        // ... (código drag)
         const li = e.target.closest('li[data-drag-id]');
         if (!li || e.target.tagName === 'BUTTON') return e.preventDefault();
         dragSrcId = li.dataset.dragId;
@@ -997,6 +1243,7 @@
         }, 0);
       });
       pList.addEventListener("dragover", (e) => {
+        // ... (código drag)
         e.preventDefault();
         if (!dragSrcId) return;
         e.dataTransfer.dropEffect = 'move';
@@ -1014,12 +1261,14 @@
         }
       });
       pList.addEventListener("dragleave", (e) => {
+        // ... (código drag)
         const destLi = e.target.closest('li[data-drag-id]');
         if (destLi) {
           destLi.classList.remove('drag-over-top', 'drag-over-bottom');
         }
       });
       pList.addEventListener("drop", (e) => {
+        // ... (código drag)
         e.preventDefault();
         if (!dragSrcId) return cleanupDragStyles();
         const destLi = e.target.closest('li[data-drag-id]');
@@ -1042,8 +1291,8 @@
         cleanupDragStyles();
       });
       
-      // ... (Restante dos eventos - idênticos)
       $("#history").addEventListener("click", (e) => {
+        // ... (código histórico)
         const btn = e.target.closest("button[data-act]");
         if (btn) {
           e.stopPropagation();
@@ -1060,9 +1309,11 @@
           if (caret) caret.classList.toggle("rotate-180");
         }
       });
+      
       $("#hist-search").addEventListener("input", renderSaidas);
       $("#s5-add").addEventListener("click", addS5Team);
       $("#s5-list").addEventListener("click", (e) => {
+        // ... (código S5)
         const btn = e.target.closest("button[data-act]");
         if (!btn) return;
         const act = btn.dataset.act, id = btn.dataset.id;
@@ -1071,6 +1322,7 @@
       });
       $("#btn-save-settings").addEventListener("click", saveSettings);
       $("#ddm-header").addEventListener("click", () => {
+        // ... (código ddm)
         $("#ddm").classList.toggle("hidden");
         $("#ddm-caret").classList.toggle("rotate-180");
       });
@@ -1078,7 +1330,17 @@
       $("#file-backup").addEventListener("change", (e) => e.target.files[0] && uploadBackup(e.target.files[0]));
       $("#btn-reset").addEventListener("click", resetAll);
       $$(".tab-btn").forEach(b => b.addEventListener("click", () => activateTab(b.dataset.tab)));
+      
+      $("#toggle-robo").addEventListener("change", (e) => {
+        state.settings.isRoboActive = e.target.checked;
+        toast(`Robô ${state.settings.isRoboActive ? 'LIGADO' : 'DESLIGADO'}.`, "ok");
+        set(ref(db, "settings/isRoboActive"), state.settings.isRoboActive);
+        
+        if (state.settings.isRoboActive) processAutoQueue();
+      });
+
       $("#alarm-pill").addEventListener("click", () => {
+        // ... (código alarme)
         state.alarmOn = !state.alarmOn;
         const pill = $("#alarm-pill");
         if (state.alarmOn) {
@@ -1094,19 +1356,15 @@
         }
       });
       
-      // O botão de login não existe mais nesta página
       $("#logout-btn").addEventListener("click", logout);
     }
 
-    /* ========================== Boot (CORRIGIDO) ========================== */
+    /* ========================== Boot ========================== */
     function boot(){
-      // Esta função agora SÓ regista o listener
       onAuthStateChanged(auth, (firebaseUser) => {
         if (firebaseUser) {
-          // --- UTILIZADOR LOGADO ---
-          // A sessão é válida, carrega a app
           console.log("Sessão válida, a carregar app...");
-          state.session = true; // Define a sessão como ativa
+          state.session = true; 
           
           initAudio();
           bindEvents();
@@ -1114,16 +1372,14 @@
           startClock();
           activateTab("saidas");
           
-          // Mostra a app (que estava escondida)
           document.documentElement.style.opacity = "1";
           document.getElementById('app').classList.remove('opacity-0');
 
         } else {
-          // --- UTILIZADOR DESLOGADO ---
-          // Se não tiver sessão, volta para o login
           console.log("Sessão inválida, a redirecionar para o login...");
           state.session = null;
-          window.location.href = "index.html"; // Redireciona para a página de login
+          // *** CORREÇÃO: "admin.html" (minúsculo) para "Login.html" (maiúsculo) ***
+          window.location.href = window.location.href.replace("admin.html", "Login.html"); 
         }
       });
     }
